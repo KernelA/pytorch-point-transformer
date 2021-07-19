@@ -1,0 +1,15 @@
+channels:
+  - defaults
+  - conda-forge
+  - pytorch-lts
+  - rusty1s 
+dependencies:
+  - python=3.8
+  - pip
+  - pytorch=1.8
+  - cudatoolkit=10.2
+  - ipykernel
+  - pylint
+  - autopep8
+  - pytorch-geometric=1.7
+  - pytest=6.2
