@@ -6,13 +6,14 @@ channels:
 dependencies:
   - python=3.8
   - pip
-  - pytorch=1.8
   - cudatoolkit=10.2
   - ipykernel
   - pylint
   - autopep8
   - pytest=6.2
   - pip:
+      - -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
+      - torch
       - -f https://pytorch-geometric.com/whl/torch-1.8.0+cu102.html
       - torch-scatter
       - torch-sparse
