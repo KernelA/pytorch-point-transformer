@@ -1,0 +1,3 @@
+# @package _group_
+data_root: ./data/simple_shapes
+num_points: 512

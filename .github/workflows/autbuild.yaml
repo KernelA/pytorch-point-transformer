@@ -1,0 +1,35 @@
+name: autobuild
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('./environment.cpu.yaml') }}
+
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: test
+          environment-file: ./environment.cpu.yaml
+          python-version: 3.8
+          auto-activate-base: false
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: pytest ./tests
