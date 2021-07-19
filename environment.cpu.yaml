@@ -9,6 +9,7 @@ dependencies:
   - autopep8
   - pytest=6.2
   - pip:
+      - hydra-core~=1.0
       - -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
       - torch==1.8.1+cpu
       - -f https://pytorch-geometric.com/whl/torch-1.8.0+cpu.html

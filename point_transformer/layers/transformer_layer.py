@@ -1,9 +1,10 @@
 from torch import nn
+import torch
 from torch.nn import functional as F
-from torch_geometric.data import Batch
 from torch_geometric.nn import MessagePassing, knn_graph
 
 from .positional_encoding import PositionalEncoder
+from ..types import PointSetBatchInfo
 
 
 class PointTransformerLayer(MessagePassing):
@@ -26,13 +27,14 @@ class PointTransformerLayer(MessagePassing):
                                    )
         self.knn_num_neighs = num_neighbors
 
-    def forward(self, features, positions, batch):
+    def forward(self, input: PointSetBatchInfo) -> PointSetBatchInfo:
         """features [N x in_features] - node features
            positions [N x num_coords] - position of points. By default num_coords is equal to 3.
            batch - batch indices
         """
+        features, positions, batch = input
         edge_indices = knn_graph(features, k=self.knn_num_neighs, batch=batch)
-        return self.propagate(edge_indices, x=features, pos=positions)
+        return self.propagate(edge_indices, x=features, pos=positions), positions, batch
 
     def message(self, x_i, x_j, pos_i, pos_j):
         pos_encoding = self.positional_encoder(pos_i, pos_j)

@@ -10,7 +10,7 @@ def test_transition_down(sample_batch):
         in_features=in_features, out_features=out_features, num_neighbors=10, fps_sample_ratio=0.5)
 
     new_features, new_postions, new_batch = transition_down(
-        sample_batch.x, sample_batch.pos, sample_batch.batch)
+        (sample_batch.x, sample_batch.pos, sample_batch.batch))
 
     assert new_features.shape[-1] == out_features
     assert new_features.shape[0] == new_postions.shape[0] == new_batch.shape[0]

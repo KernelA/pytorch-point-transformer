@@ -1,4 +1,5 @@
 from torch import nn
+import torch
 
 
 class PositionalEncoder(nn.Module):
@@ -10,7 +11,7 @@ class PositionalEncoder(nn.Module):
             nn.Linear(hid_dim, output_dim)
         )
 
-    def forward(self, pos_i, pos_j):
+    def forward(self, pos_i: torch.Tensor, pos_j: torch.Tensor) -> torch.Tensor:
         assert pos_i.shape[-1] == pos_j.shape[-1]
         """Positional encoding
 

@@ -1,9 +1,12 @@
 from torch import nn
 from torch_geometric.nn import fps, knn, max_pool_x
 
+from ..types import PointSetBatchInfo
+
 
 class TransitionDown(nn.Module):
     def __init__(self,
+                 *,
                  in_features: int,
                  out_features: int,
                  num_neighbors: int,
@@ -16,11 +19,13 @@ class TransitionDown(nn.Module):
                                  nn.ReLU()
                                  )
 
-    def forward(self, features, positions, batch):
-        """features [N x in_features] - node features
-           positions [N x num_coords] - position of points. By default num_coords is equal to 3.
-           batch - batch indices
+    def forward(self, input: PointSetBatchInfo) -> PointSetBatchInfo:
+        """input contains:
+            features [N x in_features] - node features
+            positions [N x num_coords] - position of points. By default num_coords is equal to 3.
+            batch - batch indices
         """
+        features, positions, batch = input
         fps_indices = fps(positions, batch=batch, ratio=self.fps_sample_ratio)
         out_features = self.mlp(features)
 
