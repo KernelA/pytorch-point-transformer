@@ -21,17 +21,12 @@ jobs:
           CACHE_NUMBER: 0
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('./environment.yaml') }}
-
-      # - name: Replace from GPU to CPU only PyTorch
-      #   run: |
-      #     sed -i -E 's/cudatoolkit=[0-9]+\.([0-9]+)?/cpuonly/' ./environment.yaml
-      #     sed -i 's/+cu102.html/+cpu.html/' ./environment.yaml
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('./environment.cpu.yaml') }}
 
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: test
-          environment-file: ./environment.yaml
+          environment-file: ./environment.cpu.yaml
           python-version: 3.8
           auto-activate-base: false
 

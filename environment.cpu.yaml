@@ -12,8 +12,8 @@ dependencies:
   - pytest=6.2
   - pip:
       - -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
-      - torch
-      - -f https://pytorch-geometric.com/whl/torch-1.8.0+cu102.html
+      - torch==1.8.1+cpu
+      - -f https://pytorch-geometric.com/whl/torch-1.8.0+cpu.html
       - torch-scatter
       - torch-sparse
       - torch-cluster
