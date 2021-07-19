@@ -1,0 +1,9 @@
+root = true
+
+[*{.py,.md}]
+indent_style = space
+charset = utf-8
+trim_trailing_whitespace = true
+
+[*.py]
+insert_final_newline = true
