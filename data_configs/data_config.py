@@ -7,3 +7,4 @@ from omegaconf import MISSING
 class DataConfig:
     num_points: int = MISSING
     data_root: str = MISSING
+    path_to_zip: str = MISSING

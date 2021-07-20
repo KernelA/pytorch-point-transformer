@@ -1,1 +1,1 @@
-from .simple_shapes import SimpleShapesDataset
+from .simple_shapes import SimpleShapesInMemory, SimpleShapesDataset
