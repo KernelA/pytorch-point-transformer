@@ -1,3 +1,4 @@
 # @package _group_
 _target_: data.modelnet.ModelNet40Dataset
 data_root: ./datasets/modelnet40
+path_to_zip: ./datasets/modelnet40_raw/ModelNet40.zip

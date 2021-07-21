@@ -27,6 +27,7 @@ class ClsPointTransformer(nn.Module):
                                        compress_dim=out_features * i, num_neighbors=num_neighs)
                  ]
             )
+            out_features = classification_dim
 
         self.feature_extarctor = nn.Sequential(*transformer_blocks)
         self.classification_head = nn.Linear(classification_dim, num_classes)

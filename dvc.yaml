@@ -1,0 +1,23 @@
+stages:
+  train-modelnet40:
+    cmd: python ./train.py -cd ./configs  hydra.output_subdir=null hydra.run.dir=.
+    deps:
+      - ./configs/train.yaml
+      - ./configs/scheduler/multistep.yaml
+      - ./configs/preprocess/preprocess_base.yaml
+      - ./configs/optimizer/adam.yaml
+      - ./configs/model/cls_model.yaml
+      - ./configs/data/modelnet40.yaml
+      - ./data/modelnet.py
+      - ./data/io_utils.py
+      - ./data_configs
+      - ./datasets/modelnet40_raw/ModelNet40.zip
+      - ./model/cls_network.py
+      - ./transforms/transformations.py
+      - ./point_transformer
+      - ./train.py
+    outs:
+      - ./datasets/modelnet40:
+          persist: true
+          cache: false
+      - ./exp/modelnet

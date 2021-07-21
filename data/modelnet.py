@@ -1,53 +1,92 @@
 from typing import Dict
-import glob
 import os
+import shutil
+import zipfile
+import pathlib
+import traceback
 
 import torch
-from torch_geometric.io import read_off
-from torch_geometric import datasets, data
+from torch_geometric import data
+from torch_geometric.io.off import parse_off
+import tqdm
 
 
-class ModelNetCategories(datasets.ModelNet):
-    def __init__(self, root: str, name: str, train=True, transform=None,
-                 pre_transform=None, pre_filter=None):
-        self._class_mapping = dict()
-        super().__init__(root=root, name=name,
-                         train=train,
-                         transform=transform,
-                         pre_transform=pre_transform,
-                         pre_filter=pre_filter)
+class ModelNet40(data.InMemoryDataset):
+    CLASS_NAMES = ["airplane", "bathtub", "bed", "bench", "bookshelf", "bottle", "bowl", "car",
+                   "chair", "cone", "cup", "curtain",
+                   "desk", "door", "dresser", "flower_pot", "glass_box", "guitar", "keyboard",
+                   "lamp", "laptop", "mantel", "monitor", "night_stand", "person", "piano", "plant",
+                   "radio", "range_hood", "sink", "sofa", "stairs", "stool", "table", "tent", "toilet",
+                   "tv_stand", "vase", "wardrobe", "xbox"]
+    SPLIT_TYPES = ("train", "test")
+
+    def __init__(self,
+                 path_to_zip: str,
+                 data_root: str,
+                 split_type: str,
+                 transform=None,
+                 pre_transform=None,
+                 pre_filter=None):
+        assert split_type in self.SPLIT_TYPES
+        assert len(self.CLASS_NAMES) == 40
+        self.path_to_zip = path_to_zip
+        self.split_type = split_type
+        self._processed_file_names = [f"{split_type}.pt"]
+        super().__init__(root=data_root, transform=transform, pre_transform=pre_transform, pre_filter=pre_filter)
+        self.data, self.slices = torch.load(self.processed_paths[0])
+
+    @property
+    def raw_file_names(self):
+        return [os.path.basename(self.path_to_zip)]
+
+    @property
+    def processed_file_names(self):
+        return self._processed_file_names
+
+    def download(self):
+        shutil.copy(self.path_to_zip, self.raw_dir)
 
     def get_class_mapping(self) -> Dict[str, int]:
-        return self._class_mapping
+        return {class_name: i for i, class_name in enumerate(self.CLASS_NAMES)}
 
-    def process_set(self, dataset):
-        categories = glob.glob(os.path.join(self.raw_dir, '*', ''))
-        categories = sorted([x.split(os.sep)[-2] for x in categories])
-
+    def process(self):
         data_list = []
-        for target, category in enumerate(categories):
-            folder = os.path.join(self.raw_dir, category, dataset)
-            paths = glob.glob('{}/{}_*.off'.format(folder, category))
-            for path in paths:
-                data = read_off(path)
-                data.y = torch.tensor([target])
-                data_list.append(data)
 
-            self._class_mapping[category] = target
+        class_mapping = self.get_class_mapping()
+
+        with zipfile.ZipFile(os.path.join(self.raw_dir, self.raw_file_names[0]), "r") as zip_archive:
+            files = zip_archive.infolist()
+            for file in tqdm.tqdm(files, total=len(files), desc="Process files"):
+                if not file.is_dir():
+                    full_path = pathlib.Path(file.filename)
+                    if full_path.parent.name == self.split_type and full_path.suffix == ".off":
+                        mesh_data = parse_off(zip_archive.read(
+                            file).decode("ascii").splitlines()[:-1])
+                        mesh_data.y = class_mapping[full_path.parent.parent.name]
+                        mesh_data.name = full_path.name
+                        data_list.append(mesh_data)
 
         if self.pre_filter is not None:
-            data_list = [d for d in data_list if self.pre_filter(d)]
+            data_list = [data for data in data_list if self.pre_filter(data)]
+
+        transformed = []
 
         if self.pre_transform is not None:
-            data_list = [self.pre_transform(d) for d in data_list]
+            for i in tqdm.trange(len(data_list)):
+                try:
+                    transformed.append(self.pre_transform(data_list[i]))
+                except RuntimeError:
+                    print(traceback.format_exc())
 
-        return self.collate(data_list)
+        data, slices = self.collate(transformed)
+        torch.save((data, slices), self.processed_paths[0])
 
 
 class ModelNetDataset:
     def __init__(self,
                  *,
                  data_root: str,
+                 path_to_zip: str,
                  name: str,
                  train_num_workers: int,
                  test_num_workers: int,
@@ -55,12 +94,13 @@ class ModelNetDataset:
                  test_batch_size: int,
                  train_pre_transform,
                  test_pre_transform):
+        assert name == "40", "ModelNet 10 is not implemented"
 
-        self.train_dataset = datasets.ModelNet(
-            data_root, name=name, train=True, pre_transform=train_pre_transform)
+        self.train_dataset = ModelNet40(
+            data_root=data_root, path_to_zip=path_to_zip, split_type="train", pre_transform=train_pre_transform)
 
-        self.test_dataset = datasets.ModelNet(
-            data_root, name=name, train=False, pre_transform=test_pre_transform)
+        self.test_dataset = ModelNet40(
+            data_root=data_root, path_to_zip=path_to_zip, split_type="test", pre_transform=test_pre_transform)
 
         self.train_batch_size = train_batch_size
         self.test_batch_size = test_batch_size
@@ -81,26 +121,9 @@ class ModelNetDataset:
                                num_workers=self.test_num_workers)
 
 
-class ModelNet10Dataset(ModelNetDataset):
-    def __init__(self, *, data_root: str,
-                 train_num_workers: int,
-                 test_num_workers: int,
-                 train_batch_size: int,
-                 test_batch_size: int,
-                 train_pre_transform,
-                 test_pre_transform):
-        super().__init__(data_root=data_root,
-                         name="10",
-                         train_num_workers=train_num_workers,
-                         test_num_workers=test_num_workers,
-                         train_batch_size=train_batch_size,
-                         test_batch_size=test_batch_size,
-                         train_pre_transform=train_pre_transform,
-                         test_pre_transform=test_pre_transform)
-
-
 class ModelNet40Dataset(ModelNetDataset):
     def __init__(self, *, data_root: str,
+                 path_to_zip: str,
                  train_num_workers: int,
                  test_num_workers: int,
                  train_batch_size: int,
@@ -109,6 +132,7 @@ class ModelNet40Dataset(ModelNetDataset):
                  test_pre_transform):
         super().__init__(data_root=data_root,
                          name="40",
+                         path_to_zip=path_to_zip,
                          train_num_workers=train_num_workers,
                          test_num_workers=test_num_workers,
                          train_batch_size=train_batch_size,

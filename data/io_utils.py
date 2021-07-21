@@ -15,7 +15,7 @@ def yield_file(buf):
             yield ['', ""]
 
 
-def read_obj(buffer):
+def read_obj_from_bytes(buffer):
     vertices = []
     faces = []
 

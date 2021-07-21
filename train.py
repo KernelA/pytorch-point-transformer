@@ -1,6 +1,7 @@
 import random
 import os
 import pathlib
+from typing import Dict
 
 import hydra
 from hydra.core.config_store import ConfigStore
@@ -14,16 +15,20 @@ from sklearn.metrics import confusion_matrix
 from matplotlib import pyplot as plt
 
 from data_configs import TrainConfig, PreprocessConfig
+from transforms import FusePosNormals, FeaturesFromPos
 
 cs = ConfigStore().instance()
 cs.store(name="train", node=TrainConfig)
 cs.store(name="preprocess", node=PreprocessConfig)
 
 
-def get_train_transform(num_points: int, include_normals: bool = False):
+def get_train_transform(num_points: int, include_normals: bool):
     return transforms.Compose([
         transforms.SamplePoints(num=num_points, include_normals=include_normals),
-        transforms.NormalizeScale()]
+        transforms.NormalizeScale(),
+        FeaturesFromPos(),
+        FusePosNormals()
+    ]
     )
 
 
@@ -39,7 +44,7 @@ def train_one_epoch(model, optimizer, train_loader, device) -> float:
 
     epoch_loss = 0
 
-    for data in train_loader:
+    for data in tqdm.tqdm(train_loader, desc="Train epoch"):
         data = data.to(device)
         optimizer.zero_grad()
         predicted_logits = model(data.x, data.pos, data.batch)
@@ -89,7 +94,7 @@ def plot_conf_matrix(conf_matrix, class_mapping):
     return fig
 
 
-def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader, device, log_dir, class_mapping):
+def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader, device, log_dir: str, class_mapping: Dict[str, int]):
 
     checkpoint_dir = pathlib.Path(log_dir)
     checkpoint_dir = checkpoint_dir / "checkpoint"

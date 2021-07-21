@@ -1,0 +1,4 @@
+schema: '2.0'
+stages:
+  train-modelnet40:
+    cmd: python -c "import math"

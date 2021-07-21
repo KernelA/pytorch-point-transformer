@@ -7,7 +7,7 @@ from typing import Dict
 import torch
 from torch_geometric import data
 
-from .io_utils import read_obj
+from .io_utils import read_obj_from_bytes
 
 
 class SimpleShapesInMemory(data.InMemoryDataset):
@@ -53,7 +53,7 @@ class SimpleShapesInMemory(data.InMemoryDataset):
                 if not file.is_dir():
                     full_path = pathlib.Path(file.filename)
                     if full_path.parent.name == self.split_type:
-                        mesh_data = read_obj(zip_archive.read(file).decode("ascii"))
+                        mesh_data = read_obj_from_bytes(zip_archive.read(file).decode("ascii"))
                         mesh_data.y = class_mapping[full_path.parent.parent.name]
                         data_list.append(mesh_data)
 

@@ -1,4 +1,4 @@
 # @package _group_
 _target_: model.cls_network.ClsPointTransformer
-in_features: 3
+in_features: 6
 num_transformer_blocks: 4

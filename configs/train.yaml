@@ -8,7 +8,7 @@ defaults:
 train_load_workers: 2
 test_load_workers: 2
 test_batch_size: 1024
-train_batch_size: 512
+train_batch_size: 64
 max_epochs: 100
 log_dir: ./exp/modelnet
 seed: 200
