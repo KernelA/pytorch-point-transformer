@@ -1,12 +1,14 @@
 defaults:
-  - data: simple_shapes
+  - data: modelnet40
   - optimizer: adam
   - model: cls_model
+  - scheduler: multistep
+  - preprocess: preprocess_base
 
 train_load_workers: 2
 test_load_workers: 2
 test_batch_size: 1024
-train_batch_size: 256
-max_epochs: 60
-log_dir: ./exp
-seed: 156
+train_batch_size: 512
+max_epochs: 100
+log_dir: ./exp/modelnet
+seed: 200

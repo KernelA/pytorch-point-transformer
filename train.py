@@ -1,5 +1,6 @@
 import random
 import os
+import pathlib
 
 import hydra
 from hydra.core.config_store import ConfigStore
@@ -12,17 +13,16 @@ import tqdm
 from sklearn.metrics import confusion_matrix
 from matplotlib import pyplot as plt
 
-from data_configs import TrainConfig, DataConfig
-from data import SimpleShapesDataset
+from data_configs import TrainConfig, PreprocessConfig
 
 cs = ConfigStore().instance()
 cs.store(name="train", node=TrainConfig)
-cs.store(name="data", node=DataConfig)
+cs.store(name="preprocess", node=PreprocessConfig)
 
 
-def get_train_transform(num_points: int):
+def get_train_transform(num_points: int, include_normals: bool = False):
     return transforms.Compose([
-        transforms.SamplePoints(num=num_points),
+        transforms.SamplePoints(num=num_points, include_normals=include_normals),
         transforms.NormalizeScale()]
     )
 
@@ -90,6 +90,11 @@ def plot_conf_matrix(conf_matrix, class_mapping):
 
 
 def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader, device, log_dir, class_mapping):
+
+    checkpoint_dir = pathlib.Path(log_dir)
+    checkpoint_dir = checkpoint_dir / "checkpoint"
+    checkpoint_dir.mkdir(exist_ok=True, parents=True)
+
     with SummaryWriter(log_dir=os.path.join(log_dir, "logs"), flush_secs=60) as writer:
         progress = tqdm.trange(epochs)
 
@@ -114,22 +119,23 @@ def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader
             progress.set_postfix({"Epoch loss": epoch_loss, "Overall test acc": overall_acc})
 
             del confusion_matr
+            torch.save(model.state_dict(), checkpoint_dir)
 
 
 @ hydra.main(config_name="train")
 def main(config: TrainConfig):
     set_seed(config.seed)
 
-    pre_transform = get_train_transform(config.data.num_points)
+    pre_transform = get_train_transform(
+        config.preprocess.num_points, config.preprocess.include_normals)
 
-    dataset = SimpleShapesDataset(data_root=config.data.data_root,
-                                  path_to_zip=config.data.path_to_zip,
-                                  train_pre_transform=pre_transform,
-                                  test_pre_transform=pre_transform,
-                                  train_num_workers=config.train_load_workers,
-                                  test_num_workers=config.test_load_workers,
-                                  train_batch_size=config.train_batch_size,
-                                  test_batch_size=config.test_batch_size)
+    dataset = hydra.utils.instantiate(config.data,
+                                      train_pre_transform=pre_transform,
+                                      test_pre_transform=pre_transform,
+                                      train_num_workers=config.train_load_workers,
+                                      test_num_workers=config.test_load_workers,
+                                      train_batch_size=config.train_batch_size,
+                                      test_batch_size=config.test_batch_size)
 
     class_mapping = dataset.get_class_mapping()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -138,12 +144,17 @@ def main(config: TrainConfig):
     model.to(device)
     optimizer = hydra.utils.instantiate(config.optimizer, model.parameters())
 
+    if config.scheduler is not None:
+        scheduler = hydra.utils.instantiate(config.scheduler, optimizer)
+    else:
+        scheduler = None
+
     train_loader = dataset.get_train_loader()
     test_loader = dataset.get_test_loader()
 
     os.makedirs(config.log_dir, exist_ok=True)
 
-    train(epochs=config.max_epochs, model=model, optimizer=optimizer, scheduler=None,
+    train(epochs=config.max_epochs, model=model, optimizer=optimizer, scheduler=scheduler,
           train_loader=train_loader, test_loader=test_loader, device=device, log_dir=config.log_dir,
           class_mapping=class_mapping)
 

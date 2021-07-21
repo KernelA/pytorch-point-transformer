@@ -1,0 +1,3 @@
+# @package _group_
+_target_: data.modelnet.ModelNet40Dataset
+data_root: ./datasets/modelnet40

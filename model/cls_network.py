@@ -21,7 +21,7 @@ class ClsPointTransformer(nn.Module):
         for i in range(1, num_transformer_blocks + 1):
             classification_dim = out_features * 2 * i
             transformer_blocks.extend(
-                [TransitionDown(in_features=out_features, out_features=out_features * 2 * i,
+                [TransitionDown(in_features=out_features, out_features=classification_dim,
                                 num_neighbors=num_neighs, fps_sample_ratio=0.25),
                  PointTransformerBlock(in_out_features=classification_dim,
                                        compress_dim=out_features * i, num_neighbors=num_neighs)

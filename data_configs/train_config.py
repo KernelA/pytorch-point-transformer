@@ -3,12 +3,12 @@ from typing import Any, Optional
 
 from omegaconf import MISSING
 
-from .data_config import DataConfig
+from .preprocess_config import PreprocessConfig
 
 
 @dataclass
 class TrainConfig:
-    data: DataConfig = MISSING
+    data: Any = MISSING
     train_load_workers: int = MISSING
     test_load_workers: int = MISSING
     test_batch_size: int = MISSING
@@ -19,3 +19,4 @@ class TrainConfig:
     model: Any = MISSING
     log_dir: str = MISSING
     seed: int = MISSING
+    preprocess: PreprocessConfig = MISSING
