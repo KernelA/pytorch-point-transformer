@@ -124,7 +124,7 @@ def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader
             progress.set_postfix({"Epoch loss": epoch_loss, "Overall test acc": overall_acc})
 
             del confusion_matr
-            torch.save(model.state_dict(), checkpoint_dir)
+            torch.save(model.state_dict(), checkpoint_dir / "last.pth")
 
 
 @ hydra.main(config_name="train")
