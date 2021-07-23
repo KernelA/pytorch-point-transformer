@@ -35,7 +35,8 @@ class ClsPointTransformer(nn.Module):
     def forward(self, features, positions, batch):
         projected_features = self.init_mappin(features)
         new_features, _, new_batch = self.feature_extarctor((projected_features, positions, batch))
-        encoding = global_mean_pool(new_features, new_batch)
+        num_features = new_features.shape[-1]
+        encoding = global_mean_pool(new_features.view(-1, num_features), new_batch)
         return self.classification_head(encoding)
 
     def predict_class(self, features, positions, batch):

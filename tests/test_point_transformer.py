@@ -12,7 +12,7 @@ def test_point_tranformer_layer(sample_batch):
 
     new_features, _, _ = point_transformer((sample_batch.x, sample_batch.pos, sample_batch.batch))
 
-    assert new_features.shape == (sample_batch.x.shape[0], out_features)
+    assert new_features.shape == sample_batch.x.shape[:2] + (out_features, )
 
 
 def test_transfromer_block(sample_batch):
@@ -23,5 +23,5 @@ def test_transfromer_block(sample_batch):
 
     new_features, _, _ = transformer_block((sample_batch.x, sample_batch.pos, sample_batch.batch))
 
-    assert new_features.shape[0] == sample_batch.x.shape[0]
-    assert new_features.shape[1] == in_features
+    assert new_features.shape[:2] == sample_batch.x.shape[:2]
+    assert new_features.shape[-1] == in_features

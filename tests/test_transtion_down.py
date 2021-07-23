@@ -13,5 +13,5 @@ def test_transition_down(sample_batch):
         (sample_batch.x, sample_batch.pos, sample_batch.batch))
 
     assert new_features.shape[-1] == out_features
-    assert new_features.shape[0] == new_postions.shape[0] == new_batch.shape[0]
-    assert new_features.shape[0] == sample_batch.x.shape[0] // 2
+    assert new_features.shape[:2] == new_postions.shape[:2]
+    assert new_features.shape[1] == sample_batch.x.shape[1] // 2

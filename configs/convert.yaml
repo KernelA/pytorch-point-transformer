@@ -1,0 +1,4 @@
+path_to_archive: ./datasets/modelnet40_raw/ModelNet40.zip
+path_to_hdf5: ./datasets/modelnet40_raw/modelnet40.h5
+extensions: [.off]
+mesh_format: "off"
