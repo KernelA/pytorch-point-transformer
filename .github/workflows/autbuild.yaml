@@ -15,21 +15,22 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cache conda
+      - name: Cache pip
         uses: actions/cache@v2
-        env:
-          CACHE_NUMBER: 0
         with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('./environment.cpu.yaml') }}
+          path: ~/.cache
+          key: ${{ runner.os }}-${{ hashFiles('**/requirements.*.txt') }}
 
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: actions/setup-python@v2
         with:
-          activate-environment: test
-          environment-file: ./environment.cpu.yaml
-          python-version: 3.8
-          auto-activate-base: false
+          python-version: "3.8"
+          architecture: "x64"
+
+      - name: Install wheel
+        run: pip install wheel
+
+      - name: Install dependencies
+        run: pip install -r ./requirements.cpu.txt
 
       - name: Run tests
-        shell: bash -l {0}
         run: pytest ./tests
