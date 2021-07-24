@@ -1,4 +1,50 @@
 schema: '2.0'
 stages:
-  train-modelnet40:
-    cmd: python -c "import math"
+  prepare-modelnet40:
+    cmd: python ./prepare_data.py -cd ./configs -cn prepare_modelnet40 hydra.output_subdir=null
+      hydra.run.dir=.
+    deps:
+    - path: ./configs/prepare_modelnet40.yaml
+      md5: 50cec40512db2e466ee66236f9bbc43e
+      size: 145
+    - path: ./data/io_utils.py
+      md5: 7fe16ea5406f89fe91de1583dde63fbe
+      size: 943
+    - path: ./data/modelnet.py
+      md5: 7f2fe94bb197b1d06b7200267c09172b
+      size: 6835
+    - path: ./datasets/modelnet40_raw/ModelNet40.zip
+      md5: 79bcee68fdf02f581938ba15f4cdca51
+      size: 2039180837
+    - path: ./prepare_data.py
+      md5: 12a8844047070c17bf8dfbb7fad3e07f
+      size: 567
+    outs:
+    - path: ./datasets/modelnet40
+      md5: a31a739c5f3acdd6f4ef82e823e4e583.dir
+      size: 9836425189
+      nfiles: 5
+  prepare-simple-shapes:
+    cmd: python ./prepare_data.py -cd ./configs -cn prepare_simple_shapes hydra.output_subdir=null
+      hydra.run.dir=.
+    deps:
+    - path: ./configs/prepare_simple_shapes.yaml
+      md5: cb55315232808934855e8bb74127d4e1
+      size: 155
+    - path: ./data/io_utils.py
+      md5: 7fe16ea5406f89fe91de1583dde63fbe
+      size: 943
+    - path: ./data/simple_shapes.py
+      md5: 7166c77729924fb1459fee78966be3cb
+      size: 4644
+    - path: ./datasets/shapes/dataset-v2.zip
+      md5: 2d5e4e21ffe498e34588f9bfbae18d98
+      size: 10365251
+    - path: ./prepare_data.py
+      md5: 12a8844047070c17bf8dfbb7fad3e07f
+      size: 567
+    outs:
+    - path: ./datasets/simple_shapes
+      md5: ed198a25e6a4fb890cc235baf6733a0a.dir
+      size: 27871263
+      nfiles: 5

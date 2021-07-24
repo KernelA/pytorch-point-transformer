@@ -7,6 +7,7 @@ from typing import Dict
 import torch
 from torch_geometric import data
 
+from .mesh_data import BatchedData
 from .io_utils import read_obj_from_bytes
 
 
@@ -54,17 +55,19 @@ class SimpleShapesInMemory(data.InMemoryDataset):
                     full_path = pathlib.Path(file.filename)
                     if full_path.parent.name == self.split_type:
                         mesh_data = read_obj_from_bytes(zip_archive.read(file).decode("ascii"))
-                        mesh_data.y = class_mapping[full_path.parent.parent.name]
-                        data_list.append(mesh_data)
+                        new_mesh_data = BatchedData()
+                        for key in mesh_data.keys:
+                            setattr(new_mesh_data, key, mesh_data[key])
+
+                        del mesh_data
+                        new_mesh_data.y = class_mapping[full_path.parent.parent.name]
+                        data_list.append(new_mesh_data)
 
         if self.pre_filter is not None:
             data_list = [data for data in data_list if self.pre_filter(data)]
 
         if self.pre_transform is not None:
             data_list = [self.pre_transform(data) for data in data_list]
-
-        for i in range(len(data_list)):
-            data_list[i].x = data_list[i].pos.clone()
 
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
@@ -79,19 +82,27 @@ class SimpleShapesDataset:
                  test_num_workers: int,
                  train_batch_size: int,
                  test_batch_size: int,
-                 train_pre_transform,
-                 test_pre_transform):
+                 train_transform=None,
+                 test_transform=None,
+                 train_pre_filter=None,
+                 test_pre_filter=None,
+                 train_pre_transform=None,
+                 test_pre_transform=None):
 
         self.train_dataset = SimpleShapesInMemory(
             data_root=data_root,
             path_to_zip=path_to_zip,
             split_type="train",
+            transform=train_transform,
+            pre_filter=train_pre_filter,
             pre_transform=train_pre_transform)
 
         self.test_dataset = SimpleShapesInMemory(
             path_to_zip=path_to_zip,
             data_root=data_root,
             split_type="test",
+            transform=test_transform,
+            pre_filter=test_pre_filter,
             pre_transform=test_pre_transform)
 
         self.train_batch_size = train_batch_size

@@ -10,6 +10,8 @@ from torch_geometric import data
 from torch_geometric.io.off import parse_off
 import tqdm
 
+from .mesh_data import BatchedData
+
 
 class ModelNet40(data.InMemoryDataset):
     CLASS_NAMES = ["airplane", "bathtub", "bed", "bench", "bookshelf", "bottle", "bowl", "car",
@@ -18,6 +20,7 @@ class ModelNet40(data.InMemoryDataset):
                    "lamp", "laptop", "mantel", "monitor", "night_stand", "person", "piano", "plant",
                    "radio", "range_hood", "sink", "sofa", "stairs", "stool", "table", "tent", "toilet",
                    "tv_stand", "vase", "wardrobe", "xbox"]
+
     SPLIT_TYPES = ("train", "test")
 
     def __init__(self,
@@ -62,9 +65,14 @@ class ModelNet40(data.InMemoryDataset):
                     if full_path.parent.name == self.split_type and full_path.suffix == ".off":
                         mesh_data = parse_off(zip_archive.read(
                             file).decode("ascii").splitlines()[:-1])
-                        mesh_data.y = class_mapping[full_path.parent.parent.name]
-                        mesh_data.name = full_path.name
-                        data_list.append(mesh_data)
+
+                        new_mesh_data = BatchedData()
+                        for key in mesh_data.keys:
+                            setattr(new_mesh_data, key, mesh_data[key])
+                        del mesh_data
+                        new_mesh_data.y = class_mapping[full_path.parent.parent.name]
+                        new_mesh_data.name = full_path.name
+                        data_list.append(new_mesh_data)
 
         if self.pre_filter is not None:
             data_list = [data for data in data_list if self.pre_filter(data)]
@@ -92,15 +100,27 @@ class ModelNetDataset:
                  test_num_workers: int,
                  train_batch_size: int,
                  test_batch_size: int,
-                 train_pre_transform,
-                 test_pre_transform):
+                 train_transform=None,
+                 test_transform=None,
+                 train_pre_filter=None,
+                 test_pre_filter=None,
+                 train_pre_transform=None,
+                 test_pre_transform=None):
         assert name == "40", "ModelNet 10 is not implemented"
 
         self.train_dataset = ModelNet40(
-            data_root=data_root, path_to_zip=path_to_zip, split_type="train", pre_transform=train_pre_transform)
+            data_root=data_root, path_to_zip=path_to_zip,
+            split_type="train",
+            transform=train_transform,
+            pre_filter=train_pre_filter,
+            pre_transform=train_pre_transform)
 
         self.test_dataset = ModelNet40(
-            data_root=data_root, path_to_zip=path_to_zip, split_type="test", pre_transform=test_pre_transform)
+            data_root=data_root, path_to_zip=path_to_zip,
+            split_type="test",
+            pre_transform=test_pre_transform,
+            transform=test_transform,
+            pre_filter=test_pre_filter)
 
         self.train_batch_size = train_batch_size
         self.test_batch_size = test_batch_size
@@ -128,8 +148,12 @@ class ModelNet40Dataset(ModelNetDataset):
                  test_num_workers: int,
                  train_batch_size: int,
                  test_batch_size: int,
-                 train_pre_transform,
-                 test_pre_transform):
+                 train_transform=None,
+                 test_transform=None,
+                 train_pre_filter=None,
+                 test_pre_filter=None,
+                 train_pre_transform=None,
+                 test_pre_transform=None):
         super().__init__(data_root=data_root,
                          name="40",
                          path_to_zip=path_to_zip,
@@ -137,5 +161,9 @@ class ModelNet40Dataset(ModelNetDataset):
                          test_num_workers=test_num_workers,
                          train_batch_size=train_batch_size,
                          test_batch_size=test_batch_size,
+                         train_transform=train_transform,
+                         test_transform=test_transform,
+                         train_pre_filter=train_pre_filter,
+                         test_pre_filter=test_pre_filter,
                          train_pre_transform=train_pre_transform,
                          test_pre_transform=test_pre_transform)

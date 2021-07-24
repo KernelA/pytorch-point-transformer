@@ -7,8 +7,8 @@ class FeaturesFromPos:
         return data
 
 
-class FusePosNormals:
+class FusePosAndNormals:
     def __call__(self, data):
-        data.x = torch.hstack((data.x, data.normal))
+        data.x = torch.cat((data.x, data.normal), dim=-1)
         del data.normal
         return data

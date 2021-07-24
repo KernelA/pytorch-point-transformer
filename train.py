@@ -15,7 +15,7 @@ from sklearn.metrics import confusion_matrix
 from matplotlib import pyplot as plt
 
 from data_configs import TrainConfig, PreprocessConfig
-from transforms import FusePosNormals, FeaturesFromPos
+from transforms import FusePosAndNormals, FeaturesFromPos
 
 cs = ConfigStore().instance()
 cs.store(name="train", node=TrainConfig)
@@ -25,11 +25,8 @@ cs.store(name="preprocess", node=PreprocessConfig)
 def get_train_transform(num_points: int, include_normals: bool):
     return transforms.Compose([
         transforms.SamplePoints(num=num_points, include_normals=include_normals),
-        transforms.NormalizeScale(),
         FeaturesFromPos(),
-        FusePosNormals()
-    ]
-    )
+        FusePosAndNormals()])
 
 
 def set_seed(seed: int):
@@ -56,7 +53,7 @@ def train_one_epoch(model, optimizer, train_loader, device) -> float:
     return epoch_loss / len(train_loader)
 
 
-@torch.no_grad()
+@ torch.no_grad()
 def eval_one_epoch(model, test_loader, device):
     model.eval()
     true_labels = []
