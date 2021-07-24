@@ -10,6 +10,4 @@ def test_cls_networks(sample_batch):
     layer = LinearBN(NUM_COORDS, out_features)
     output = layer(sample_batch.x)
 
-    breakpoint()
-
     assert output.shape == sample_batch.x.shape[:2] + (out_features,)
