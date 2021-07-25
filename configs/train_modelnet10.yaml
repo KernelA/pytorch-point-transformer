@@ -4,7 +4,7 @@ defaults:
   - model: cls_model
   - scheduler: multistep
   - preprocess: preprocess_base
-  - prepare: prepare_simple_shapes
+  - prepare: prepare_modelnet10
 
 train_load_workers: 2
 test_load_workers: 2

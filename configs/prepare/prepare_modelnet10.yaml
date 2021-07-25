@@ -1,4 +1,3 @@
-# @package _group_
 _target_: data.modelnet.ModelNet10
 path_to_zip: ./datasets/modelnet10_raw/ModelNet10.zip
 data_root: ./datasets/modelnet10

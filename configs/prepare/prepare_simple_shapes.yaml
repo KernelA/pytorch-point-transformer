@@ -1,4 +1,3 @@
-# @package _group_
 _target_: data.simple_shapes.SimpleShapesInMemory
 path_to_zip: ./datasets/shapes/dataset-v2.zip
 data_root: ./datasets/simple_shapes
