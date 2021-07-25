@@ -1,9 +1,9 @@
 -r ./requirements.base.txt
 -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
-torch~=1.8
+torch==1.8.1
 -f https://pytorch-geometric.com/whl/torch-1.8.0+cu102.html
 torch-scatter
 torch-sparse
 torch-cluster
 torch-spline-conv
-torch-geometric~=1.7
+torch-geometric~=1.7.2
