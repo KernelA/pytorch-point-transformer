@@ -33,7 +33,8 @@ class ModelNet(data.Dataset):
 
         with zipfile.ZipFile(self._path_to_zip, "r") as archive:
             zip_names = self._get_zip_names(archive)
-            self._processed_file_names = list(f"mesh_{i}.pt" for i in range(len(zip_names)))
+            self._processed_file_names = list(
+                f"mesh_{self.split_type}_{i}.pt" for i in range(len(zip_names)))
 
         self._raw_file_name = [os.path.basename(self._path_to_zip)]
 

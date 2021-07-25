@@ -20,7 +20,7 @@ loggers:
   pt.datasets:
     level: DEBUG
     handlers: [console]
-    propogate: no
+    propagate: no
 root:
   level: INFO
   handlers: [console]
