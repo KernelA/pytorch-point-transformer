@@ -1,8 +1,8 @@
 stages:
   train-modelnet40:
-    cmd: python ./train.py -cd ./configs hydra.output_subdir=null hydra.run.dir=.
+    cmd: python ./train.py -cd ./configs -cn train_modelnet40 hydra.output_subdir=null hydra.run.dir=.
     deps:
-      - ./configs/train.yaml
+      - ./configs/train_modelnet40.yaml
       - ./configs/scheduler/multistep.yaml
       - ./configs/preprocess/preprocess_base.yaml
       - ./configs/optimizer/adam.yaml
