@@ -110,11 +110,11 @@ class ModelNet(data.Dataset):
                     self._processed_file_names.remove(os.path.basename(processed_file))
                     self.logger.exception("Unexpected error in pre_transform")
 
-    def __len__(self):
+    def len(self):
         return len(self.processed_file_names)
 
     def get(self, idx: int) -> BatchedData:
-        return torch.load(self.processed_file_names[idx])
+        return torch.load(self.processed_paths[idx])
 
 
 class ModelNet40(ModelNet):
