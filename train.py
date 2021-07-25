@@ -1,5 +1,4 @@
 import random
-import os
 import pathlib
 from typing import Dict
 
@@ -8,6 +7,7 @@ from hydra.core.config_store import ConfigStore
 from torch_geometric import transforms
 import numpy as np
 import torch
+from omegaconf import OmegaConf
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 import tqdm
@@ -53,17 +53,36 @@ def train_one_epoch(model, optimizer, train_loader, device) -> float:
     return epoch_loss / len(train_loader)
 
 
+def log_point_cloud(epoch: int, batch_index: int, data, log_writer):
+    point_size_config = {
+        'material': {
+            'cls': 'PointsMaterial',
+            'size': 4
+        }
+    }
+    vertices = data.pos[None, ...]
+    colors = torch.tile(torch.tensor(
+        [[[255, 0, 0]]], dtype=torch.uint8), (1, vertices.shape[1], 1))
+    log_writer.add_mesh(f"Test/Incorrect example at {batch_index}",
+                        vertices=vertices, colors=colors, global_step=epoch, config_dict={"material": point_size_config})
+
+
 @ torch.no_grad()
-def eval_one_epoch(model, test_loader, device):
+def eval_one_epoch(epoch: int, model, test_loader, log_writer, device):
     model.eval()
     true_labels = []
     predicted_labels = []
 
-    for data in test_loader:
+    for batch_index, data in enumerate(test_loader):
         true_labels.extend(data.y)
         data = data.to(device)
-        predicted = model.predict_class(data.x, data.pos, data.batch).cpu()
-        predicted_labels.extend(predicted)
+        predicted = model.predict_class(data.x, data.pos, data.batch)
+        incorrect_example_index = torch.nonzero(predicted != data.y).view(-1)
+        if len(incorrect_example_index) > 0:
+            incorrect_example_index = incorrect_example_index[0].item()
+            incorrect_example = data[incorrect_example_index]
+            log_point_cloud(epoch, batch_index, incorrect_example, log_writer)
+        predicted_labels.extend(predicted.cpu())
 
     return true_labels, predicted_labels
 
@@ -91,13 +110,11 @@ def plot_conf_matrix(conf_matrix, class_mapping):
     return fig
 
 
-def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader, device, log_dir: str, class_mapping: Dict[str, int]):
-
-    checkpoint_dir = pathlib.Path(log_dir)
-    checkpoint_dir = checkpoint_dir / "checkpoint"
+def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader, device, log_dir: pathlib.Path, class_mapping: Dict[str, int]):
+    checkpoint_dir = log_dir / "checkpoint"
     checkpoint_dir.mkdir(exist_ok=True, parents=True)
 
-    with SummaryWriter(log_dir=os.path.join(log_dir, "logs"), flush_secs=60) as writer:
+    with SummaryWriter(log_dir=log_dir / "logs", flush_secs=60) as writer:
         progress = tqdm.trange(epochs)
 
         for epoch in progress:
@@ -105,7 +122,8 @@ def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader
 
             writer.add_scalar("Train/NLL", epoch_loss, global_step=epoch)
 
-            true_labels, predicted_labels = eval_one_epoch(model, test_loader, device)
+            true_labels, predicted_labels = eval_one_epoch(
+                epoch, model, test_loader, writer, device)
 
             if scheduler is not None:
                 scheduler.step()
@@ -162,10 +180,17 @@ def main(config: TrainConfig):
     train_loader = dataset.get_train_loader()
     test_loader = dataset.get_test_loader()
 
-    os.makedirs(config.log_dir, exist_ok=True)
+    exp_dir = pathlib.Path(config.log_dir)
+    exp_dir.mkdir(exist_ok=True, parents=True)
+
+    config_dir = exp_dir / "config"
+    config_dir.mkdir(exist_ok=True)
+
+    with open(config_dir / "config.yaml", "w", encoding="utf-8") as file:
+        OmegaConf.save(config=config, f=file)
 
     train(epochs=config.max_epochs, model=model, optimizer=optimizer, scheduler=scheduler,
-          train_loader=train_loader, test_loader=test_loader, device=device, log_dir=config.log_dir,
+          train_loader=train_loader, test_loader=test_loader, device=device, log_dir=exp_dir,
           class_mapping=class_mapping)
 
 

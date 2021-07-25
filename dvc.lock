@@ -94,13 +94,37 @@ stages:
       size: 20259
       nfiles: 20
     - path: ./train.py
-      md5: 4880cb62f052a16f03883e4de13a30d4
-      size: 5975
+      md5: 6dbc2c6620b3d0c071b4f38a8e8b359b
+      size: 6940
     - path: ./transforms/transformations.py
       md5: 1b18ee044cd9681f36bd36b6e9b41497
       size: 295
     outs:
     - path: ./exp/simple_shapes
-      md5: 335b24c745af7abf22505664d1e59450.dir
-      size: 122656
+      md5: 1f6090bd85035d383a7c061044a27bca.dir
+      size: 1043453
       nfiles: 2
+  prepare-modelnet10:
+    cmd: python ./prepare_data.py -cd ./configs/prepare -cn prepare_modelnet10 hydra.output_subdir=null
+      hydra.run.dir=.
+    deps:
+    - path: ./configs/prepare/prepare_modelnet10.yaml
+      md5: 8c40c346401b255d0441a7576fad5052
+      size: 145
+    - path: ./data/io_utils.py
+      md5: 7fe16ea5406f89fe91de1583dde63fbe
+      size: 943
+    - path: ./data/modelnet.py
+      md5: a88b5255b7dcc8953b3cef140090b21e
+      size: 10173
+    - path: ./datasets/modelnet10_raw/ModelNet10.zip
+      md5: 18f4c73879802c35aa6178f8e773a99e
+      size: 473402300
+    - path: ./prepare_data.py
+      md5: dfd02c91cd4f3cf35898ab0738f2cb4e
+      size: 561
+    outs:
+    - path: ./datasets/modelnet10
+      md5: 9cac49f0f74f2bbd92869de976e364d6.dir
+      size: 2245881576
+      nfiles: 5

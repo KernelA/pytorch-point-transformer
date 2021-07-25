@@ -1,0 +1,15 @@
+defaults:
+  - datasets: modelnet10
+  - optimizer: adam
+  - model: cls_model
+  - scheduler: multistep
+  - preprocess: preprocess_base
+  - prepare: prepare_simple_shapes
+
+train_load_workers: 2
+test_load_workers: 2
+test_batch_size: 512
+train_batch_size: 128
+max_epochs: 100
+log_dir: ./exp/modelnet10
+seed: 200
