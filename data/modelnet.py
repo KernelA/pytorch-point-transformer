@@ -14,7 +14,7 @@ import log_set
 from .mesh_data import BatchedData
 
 
-class ModelNet(data.InMemoryDataset):
+class ModelNet(data.Dataset):
     SPLIT_TYPES = ("train", "test")
 
     def __init__(self,
@@ -23,85 +23,97 @@ class ModelNet(data.InMemoryDataset):
                  split_type: str,
                  class_names: List[str],
                  transform=None,
-                 pre_transform=None,
-                 pre_filter=None):
+                 pre_transform=None):
         assert split_type in self.SPLIT_TYPES
         self.logger = logging.getLogger("pt.data")
-        self.path_to_zip = path_to_zip
         self.split_type = split_type
         self.class_names = class_names
-        self._processed_file_names = [f"{split_type}.pt"]
+
+        self._path_to_zip = path_to_zip
+
+        with zipfile.ZipFile(self._path_to_zip, "r") as archive:
+            zip_names = self._get_zip_names(archive)
+            self._processed_file_names = list(f"mesh_{i}.pt" for i in range(len(zip_names)))
+
+        self._raw_file_name = [os.path.basename(self._path_to_zip)]
+
         super().__init__(root=data_root,
                          transform=transform,
-                         pre_transform=pre_transform,
-                         pre_filter=pre_filter)
-        self.data, self.slices = torch.load(self.processed_paths[0])
+                         pre_transform=pre_transform)
 
     @property
-    def raw_file_names(self):
-        return [os.path.basename(self.path_to_zip)]
+    def raw_file_names(self) -> List[str]:
+        return self._raw_file_name
 
     @property
     def processed_file_names(self):
         return self._processed_file_names
 
     def download(self):
-        self.logger.info("Copy %s to %s", self.path_to_zip, self.raw_dir)
-        shutil.copy(self.path_to_zip, self.raw_dir)
+        self.logger.info("Copy %s to %s", self._path_to_zip, self.raw_dir)
+        shutil.copy(self._path_to_zip, self.raw_dir)
 
     def get_class_mapping(self) -> Dict[str, int]:
         return {class_name: i for i, class_name in enumerate(self.class_names)}
 
-    def process(self):
-        data_list = []
+    def _get_zip_names(self, zip_archive) -> List[zipfile.ZipInfo]:
+        zip_files = zip_archive.infolist()
+        filtered_zip_files = []
 
+        for zip_file in zip_files:
+            if zip_file.is_dir() or zip_file.filename.startswith("__MACOSX"):
+                continue
+
+            full_path = pathlib.Path(zip_file.filename)
+
+            if full_path.parent.name == self.split_type and full_path.suffix == ".off":
+                filtered_zip_files.append(zip_file)
+
+        return filtered_zip_files
+
+    def process(self):
         class_mapping = self.get_class_mapping()
 
-        zip_path = os.path.join(self.raw_dir, self.raw_file_names[0])
+        zip_path = self.raw_paths[0]
 
         self.logger.info("Open %s", zip_path)
 
         with zipfile.ZipFile(zip_path, "r") as zip_archive:
-            zip_files = zip_archive.infolist()
+            zip_files = self._get_zip_names(zip_archive)
 
-            for zip_file in tqdm.tqdm(zip_files, total=len(zip_files), desc="Process files"):
-                if zip_file.is_dir() or zip_file.filename.startswith("__MACOSX"):
-                    continue
-
+            for zip_file, processed_file in tqdm.tqdm(zip(zip_files, self.processed_paths), total=len(zip_files), desc="Process files"):
                 full_path = pathlib.Path(zip_file.filename)
 
-                if full_path.parent.name == self.split_type and full_path.suffix == ".off":
-                    try:
-                        mesh_data = parse_off(zip_archive.read(
-                            zip_file).decode("utf-8").splitlines()[:-1])
-                    except UnicodeDecodeError:
-                        self.logger.exception("Error when parse %s. Skip it", zip_file.filename)
-                        continue
-
-                    new_mesh_data = BatchedData()
-                    for key in mesh_data.keys:
-                        setattr(new_mesh_data, key, mesh_data[key])
-                    del mesh_data
-                    new_mesh_data.y = class_mapping[full_path.parent.parent.name]
-                    new_mesh_data.name = full_path.name
-                    data_list.append(new_mesh_data)
-
-        if self.pre_filter is not None:
-            data_list = [data for data in data_list if self.pre_filter(data)]
-
-        transformed = []
-
-        if self.pre_transform is not None:
-            for i in tqdm.trange(len(data_list)):
                 try:
-                    transformed.append(self.pre_transform(data_list[i]))
+                    mesh_data = parse_off(zip_archive.read(
+                        zip_file).decode("utf-8").splitlines()[:-1])
+                except UnicodeDecodeError:
+                    self.logger.exception("Error when parse %s. Skip it", zip_file.filename)
+                    continue
+
+                new_mesh_data = BatchedData()
+                for key in mesh_data.keys:
+                    setattr(new_mesh_data, key, mesh_data[key])
+                del mesh_data
+                new_mesh_data.y = class_mapping[full_path.parent.parent.name]
+                new_mesh_data.name = full_path.name
+
+                try:
+                    if self.pre_transform is not None:
+                        transformed = self.pre_transform(new_mesh_data)
+                    else:
+                        transformed = new_mesh_data
+
+                    torch.save(transformed, processed_file)
                 except RuntimeError:
+                    self._processed_file_names.remove(os.path.basename(processed_file))
                     self.logger.exception("Unexpected error in pre_transform")
 
-        self.logger.info("Loaded %d samples", len(transformed))
+    def __len__(self):
+        return len(self.processed_file_names)
 
-        data, slices = self.collate(transformed)
-        torch.save((data, slices), self.processed_paths[0])
+    def __getitem__(self, idx: int) -> BatchedData:
+        return torch.load(self.processed_file_names[idx])
 
 
 class ModelNet40(ModelNet):
@@ -110,8 +122,7 @@ class ModelNet40(ModelNet):
                  data_root: str,
                  split_type: str,
                  transform=None,
-                 pre_transform=None,
-                 pre_filter=None):
+                 pre_transform=None):
         class_names = ["airplane", "bathtub", "bed", "bench", "bookshelf", "bottle", "bowl", "car",
                        "chair", "cone", "cup", "curtain",
                        "desk", "door", "dresser", "flower_pot", "glass_box", "guitar", "keyboard",
@@ -119,7 +130,7 @@ class ModelNet40(ModelNet):
                        "radio", "range_hood", "sink", "sofa", "stairs", "stool", "table", "tent", "toilet",
                        "tv_stand", "vase", "wardrobe", "xbox"]
         super().__init__(path_to_zip, data_root, split_type, class_names,
-                         transform=transform, pre_transform=pre_transform, pre_filter=pre_filter)
+                         transform=transform, pre_transform=pre_transform)
 
     def download(self):
         return super().download()
@@ -134,12 +145,11 @@ class ModelNet10(ModelNet):
                  data_root: str,
                  split_type: str,
                  transform=None,
-                 pre_transform=None,
-                 pre_filter=None):
+                 pre_transform=None):
         class_names = ["bathtub", "bed", "chair", "desk", "dresser",
                        "monitor", "night_stand", "sofa", "table", "toilet"]
         super().__init__(path_to_zip, data_root, split_type, class_names,
-                         transform=transform, pre_transform=pre_transform, pre_filter=pre_filter)
+                         transform=transform, pre_transform=pre_transform)
 
     def download(self):
         return super().download()
@@ -160,10 +170,8 @@ class ModelNetDataset:
                  test_batch_size: int,
                  train_transform=None,
                  test_transform=None,
-                 train_pre_filter=None,
-                 test_pre_filter=None,
                  train_pre_transform=None,
-                 test_pre_transform=None):
+                 test_pre_transform):
         assert name in ("40", "10")
 
         class_name = ModelNet40 if name == "40" else ModelNet10
@@ -172,15 +180,13 @@ class ModelNetDataset:
             data_root=data_root, path_to_zip=path_to_zip,
             split_type="train",
             transform=train_transform,
-            pre_filter=train_pre_filter,
             pre_transform=train_pre_transform)
 
         self.test_dataset = class_name(
             data_root=data_root, path_to_zip=path_to_zip,
             split_type="test",
             pre_transform=test_pre_transform,
-            transform=test_transform,
-            pre_filter=test_pre_filter)
+            transform=test_transform)
 
         self.train_batch_size = train_batch_size
         self.test_batch_size = test_batch_size
@@ -210,8 +216,6 @@ class ModelNet40Dataset(ModelNetDataset):
                  test_batch_size: int,
                  train_transform=None,
                  test_transform=None,
-                 train_pre_filter=None,
-                 test_pre_filter=None,
                  train_pre_transform=None,
                  test_pre_transform=None):
         super().__init__(data_root=data_root,
@@ -223,8 +227,6 @@ class ModelNet40Dataset(ModelNetDataset):
                          test_batch_size=test_batch_size,
                          train_transform=train_transform,
                          test_transform=test_transform,
-                         train_pre_filter=train_pre_filter,
-                         test_pre_filter=test_pre_filter,
                          train_pre_transform=train_pre_transform,
                          test_pre_transform=test_pre_transform)
 
@@ -238,8 +240,6 @@ class ModelNet10Dataset(ModelNetDataset):
                  test_batch_size: int,
                  train_transform=None,
                  test_transform=None,
-                 train_pre_filter=None,
-                 test_pre_filter=None,
                  train_pre_transform=None,
                  test_pre_transform=None):
         super().__init__(data_root=data_root,
@@ -251,7 +251,5 @@ class ModelNet10Dataset(ModelNetDataset):
                          test_batch_size=test_batch_size,
                          train_transform=train_transform,
                          test_transform=test_transform,
-                         train_pre_filter=train_pre_filter,
-                         test_pre_filter=test_pre_filter,
                          train_pre_transform=train_pre_transform,
                          test_pre_transform=test_pre_transform)

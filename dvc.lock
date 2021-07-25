@@ -109,14 +109,14 @@ stages:
       hydra.run.dir=.
     deps:
     - path: ./configs/prepare/prepare_modelnet10.yaml
-      md5: 8c40c346401b255d0441a7576fad5052
-      size: 145
+      md5: 65ae50adfbff987c88a7bf762672002b
+      size: 125
     - path: ./data/io_utils.py
       md5: 7fe16ea5406f89fe91de1583dde63fbe
       size: 943
     - path: ./data/modelnet.py
-      md5: a88b5255b7dcc8953b3cef140090b21e
-      size: 10173
+      md5: 2d0d49992c68f3d576fae61dd1b72b0a
+      size: 9820
     - path: ./datasets/modelnet10_raw/ModelNet10.zip
       md5: 18f4c73879802c35aa6178f8e773a99e
       size: 473402300
@@ -125,6 +125,6 @@ stages:
       size: 561
     outs:
     - path: ./datasets/modelnet10
-      md5: 9cac49f0f74f2bbd92869de976e364d6.dir
-      size: 2245881576
-      nfiles: 5
+      md5: 27d1f326e5a90dac095aa67f8d7a6b2a.dir
+      size: 531549583
+      nfiles: 174
