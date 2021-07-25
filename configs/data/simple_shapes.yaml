@@ -1,4 +1,0 @@
-# @package _group_
-_target_: data.simple_shapes.SimpleShapes
-data_root: ./datasets/simple_shapes
-path_to_zip: ./datasets/shapes/dataset-v2.zip

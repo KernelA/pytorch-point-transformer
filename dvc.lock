@@ -25,10 +25,10 @@ stages:
       size: 9836425189
       nfiles: 5
   prepare-simple-shapes:
-    cmd: python ./prepare_data.py -cd ./configs -cn prepare_simple_shapes hydra.output_subdir=null
-      hydra.run.dir=.
+    cmd: python ./prepare_data.py -cd ./configs/prepare -cn prepare_simple_shapes
+      hydra.output_subdir=null hydra.run.dir=.
     deps:
-    - path: ./configs/prepare_simple_shapes.yaml
+    - path: ./configs/prepare/prepare_simple_shapes.yaml
       md5: cb55315232808934855e8bb74127d4e1
       size: 155
     - path: ./data/io_utils.py
@@ -45,6 +45,62 @@ stages:
       size: 567
     outs:
     - path: ./datasets/simple_shapes
-      md5: ed198a25e6a4fb890cc235baf6733a0a.dir
+      md5: dab08f947bfeaa184db9d0e605ccb831.dir
       size: 27871263
       nfiles: 5
+  train-simple-shapes:
+    cmd: python ./train.py -cd ./configs -cn ./train_simple_shapes hydra.output_subdir=null
+      hydra.run.dir=. model.num_transformer_blocks=1
+    deps:
+    - path: ./configs/datasets/simple_shapes.yaml
+      md5: 0ae8f84f82102bf2fc59fb2ca30fe426
+      size: 70
+    - path: ./configs/model/cls_model.yaml
+      md5: c7306fde436c61a1436a5dfd4a613c62
+      size: 112
+    - path: ./configs/optimizer/adam.yaml
+      md5: 07d7a1aa8398a11aea6879728cade0fa
+      size: 114
+    - path: ./configs/preprocess/preprocess_base.yaml
+      md5: 51f7eb620be458b6fe155c9ca520ebf0
+      size: 61
+    - path: ./configs/scheduler/multistep.yaml
+      md5: 2fbd08ab62ed8d44df6967f8929c90f3
+      size: 102
+    - path: ./configs/train_simple_shapes.yaml
+      md5: 9cebbe93199d2fc4d1badcd4684a5bf1
+      size: 327
+    - path: ./data/io_utils.py
+      md5: 7fe16ea5406f89fe91de1583dde63fbe
+      size: 943
+    - path: ./data/simple_shapes.py
+      md5: 7166c77729924fb1459fee78966be3cb
+      size: 4644
+    - path: ./data_configs/preprocess_config.py
+      md5: 9f0b819b3c77c59527f337d8a016b6b3
+      size: 211
+    - path: ./data_configs/train_config.py
+      md5: 52f96901a5c2d664a926aba89f39c33f
+      size: 617
+    - path: ./datasets/simple_shapes
+      md5: dab08f947bfeaa184db9d0e605ccb831.dir
+      size: 27871263
+      nfiles: 5
+    - path: ./model/cls_network.py
+      md5: c1f255deb8f1a66391af82f1daf7038d
+      size: 2014
+    - path: ./point_transformer
+      md5: 8fb709e5991d4045736c367ee6adea8d.dir
+      size: 20259
+      nfiles: 20
+    - path: ./train.py
+      md5: 4880cb62f052a16f03883e4de13a30d4
+      size: 5975
+    - path: ./transforms/transformations.py
+      md5: 1b18ee044cd9681f36bd36b6e9b41497
+      size: 295
+    outs:
+    - path: ./exp/simple_shapes
+      md5: 335b24c745af7abf22505664d1e59450.dir
+      size: 122656
+      nfiles: 2

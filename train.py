@@ -124,16 +124,24 @@ def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader
             torch.save(model.state_dict(), checkpoint_dir / "last.pth")
 
 
+def enable_cudnn_optimizations():
+    torch.backends.cudnn.benchmark = True
+
+
 @ hydra.main(config_name="train")
 def main(config: TrainConfig):
     set_seed(config.seed)
 
-    pre_transform = get_train_transform(
+    enable_cudnn_optimizations()
+
+    transform = get_train_transform(
         config.preprocess.num_points, config.preprocess.include_normals)
 
-    dataset = hydra.utils.instantiate(config.data,
-                                      train_pre_transform=pre_transform,
-                                      test_pre_transform=pre_transform,
+    dataset = hydra.utils.instantiate(config.datasets,
+                                      data_root=config.prepare.data_root,
+                                      path_to_zip=config.prepare.path_to_zip,
+                                      train_transform=transform,
+                                      test_transform=transform,
                                       train_num_workers=config.train_load_workers,
                                       test_num_workers=config.test_load_workers,
                                       train_batch_size=config.train_batch_size,

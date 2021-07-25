@@ -8,7 +8,7 @@ from .preprocess_config import PreprocessConfig
 
 @dataclass
 class TrainConfig:
-    data: Any = MISSING
+    datasets: Any = MISSING
     train_load_workers: int = MISSING
     test_load_workers: int = MISSING
     test_batch_size: int = MISSING
@@ -20,3 +20,4 @@ class TrainConfig:
     log_dir: str = MISSING
     seed: int = MISSING
     preprocess: PreprocessConfig = MISSING
+    prepare: Any = MISSING

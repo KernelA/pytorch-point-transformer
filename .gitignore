@@ -141,3 +141,4 @@ cython_debug/
 outputs/
 datasets/
 exp/
+!configs/datasets
