@@ -112,7 +112,7 @@ class ModelNet(data.Dataset):
     def __len__(self):
         return len(self.processed_file_names)
 
-    def __getitem__(self, idx: int) -> BatchedData:
+    def get(self, idx: int) -> BatchedData:
         return torch.load(self.processed_file_names[idx])
 
 

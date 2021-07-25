@@ -7,7 +7,7 @@ stages:
       - ./configs/preprocess/preprocess_base.yaml
       - ./configs/optimizer/adam.yaml
       - ./configs/model/cls_model.yaml
-      - ./configs/data/modelnet40.yaml
+      - ./configs/datasets/modelnet40.yaml
       - ./data/modelnet.py
       - ./data/io_utils.py
       - ./data_configs
