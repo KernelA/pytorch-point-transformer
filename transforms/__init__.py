@@ -1,1 +1,1 @@
-from .transformations import FeaturesFromPos, FusePosAndNormals
+from .transformations import *
