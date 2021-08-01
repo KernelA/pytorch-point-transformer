@@ -11,6 +11,9 @@ class LinearBN(nn.Module):
     def forward(self, input):
         """input [B x N x in_features]
         """
+        batch_size = input.shape[0]
+        num_samples = input.shape[1]
         linear_mapping = self.linear_mapping(input)
-        normalized = self.bn(linear_mapping.permute(0, 2, 1)).permute(0, 2, 1)
+        normalized = self.bn(linear_mapping.view(-1, self.bn.num_features)
+                             ).view(batch_size, num_samples, self.bn.num_features)
         return F.relu(normalized)
