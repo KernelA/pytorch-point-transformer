@@ -33,7 +33,7 @@ class TransitionDown(nn.Module):
         num_features = features.shape[-1]
         flatten_features = features.view(-1, num_features)
 
-        out_features = self.mlp(features).reshape(-1, self._out_features)
+        out_features = self.mlp(features).view(-1, self._out_features)
 
         # [2 x num_neighbors * fps_indices]
         # self point in knn

@@ -40,7 +40,7 @@ class TransitionUp(nn.Module):
         num_features = features_1.shape[-1]
         num_coords = positions_1.shape[-1]
 
-        flatten_features_1 = features_1.reshape(-1, num_features)
+        flatten_features_1 = features_1.view(-1, num_features)
         flatten_positions_1 = positions_1.view(-1, num_coords)
         flatten_positions_2 = positions_2.view(-1, num_coords)
 
