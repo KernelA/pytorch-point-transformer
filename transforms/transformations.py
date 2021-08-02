@@ -31,10 +31,10 @@ class SamplePoints:
             if key not in ("pos", "face", "normal"):
                 new_data[key] = data[key]
 
-        new_data.pos = samples
+        new_data.pos = torch.from_numpy(samples)
 
         if self.include_normals:
-            new_data.normal = mesh.face_normals[face_indices]
+            new_data.normal = torch.from_numpy(mesh.face_normals[face_indices])
 
         return new_data
 
