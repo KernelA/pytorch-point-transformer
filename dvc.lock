@@ -115,16 +115,16 @@ stages:
       md5: 7fe16ea5406f89fe91de1583dde63fbe
       size: 943
     - path: ./data/modelnet.py
-      md5: 2d0d49992c68f3d576fae61dd1b72b0a
-      size: 9820
+      md5: 044289a40cc20905c170b3115375a78c
+      size: 10664
     - path: ./datasets/modelnet10_raw/ModelNet10.zip
       md5: 18f4c73879802c35aa6178f8e773a99e
       size: 473402300
     - path: ./prepare_data.py
-      md5: dfd02c91cd4f3cf35898ab0738f2cb4e
-      size: 561
+      md5: 0268140b9eaf4e0b33fafe89d87ff4c2
+      size: 770
     outs:
     - path: ./datasets/modelnet10
-      md5: 27d1f326e5a90dac095aa67f8d7a6b2a.dir
-      size: 531549583
-      nfiles: 174
+      md5: 2735a43dd47bfc39a63e299235823b87.dir
+      size: 1777870587
+      nfiles: 4901

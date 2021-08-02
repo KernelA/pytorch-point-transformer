@@ -9,3 +9,4 @@ hydra-core~=1.1.0
 h5py~=3.3
 tzlocal
 colorlog~=5.0
+trimesh~=3.9
