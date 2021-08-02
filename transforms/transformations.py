@@ -2,6 +2,7 @@ from data.mesh_data import BatchedData
 import torch
 import trimesh
 from trimesh import sample
+import numpy as np
 
 
 class FeaturesFromPos:
@@ -31,10 +32,10 @@ class SamplePoints:
             if key not in ("pos", "face", "normal"):
                 new_data[key] = data[key]
 
-        new_data.pos = torch.from_numpy(samples)
+        new_data.pos = torch.from_numpy(samples.astype(np.float32))
 
         if self.include_normals:
-            new_data.normal = torch.from_numpy(mesh.face_normals[face_indices])
+            new_data.normal = torch.from_numpy(mesh.face_normals[face_indices].astype(np.float32))
 
         return new_data
 
