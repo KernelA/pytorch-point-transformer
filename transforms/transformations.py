@@ -24,6 +24,7 @@ class SamplePoints:
         self.include_normals = include_normals
 
     def __call__(self, data):
+        # data.face has shape [3 x N]
         mesh = trimesh.Trimesh(vertices=data.pos.numpy(), faces=data.face.T.numpy())
         samples, face_indices = sample.sample_surface(mesh, count=self.num_points)
         new_data = BatchedData(x=data.x)

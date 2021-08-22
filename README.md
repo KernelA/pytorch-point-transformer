@@ -1,5 +1,7 @@
 # pytorch-point-transformer
 
+[Original article](https://arxiv.org/abs/2012.09164)
+
 ## Description
 
 

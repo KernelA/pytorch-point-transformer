@@ -78,10 +78,12 @@ def eval_one_epoch(epoch: int, model, test_loader, log_writer, device):
         data = data.to(device)
         predicted = model.predict_class(data.x, data.pos, data.batch)
         incorrect_example_index = torch.nonzero(predicted != data.y).view(-1)
+
         if len(incorrect_example_index) > 0:
             incorrect_example_index = incorrect_example_index[0].item()
             incorrect_example = data[incorrect_example_index]
             log_point_cloud(epoch, batch_index, incorrect_example, log_writer)
+
         predicted_labels.extend(predicted.cpu())
 
     return true_labels, predicted_labels
@@ -110,7 +112,10 @@ def plot_conf_matrix(conf_matrix, class_mapping):
     return fig
 
 
-def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader, device, log_dir: pathlib.Path, class_mapping: Dict[str, int]):
+def train(*, epochs: int, model, optimizer, scheduler, train_loader, test_loader, device,
+          log_dir: pathlib.Path,
+          class_mapping: Dict[str, int]):
+
     checkpoint_dir = log_dir / "checkpoint"
     checkpoint_dir.mkdir(exist_ok=True, parents=True)
 

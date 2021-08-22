@@ -6,4 +6,4 @@ torch-scatter
 torch-sparse
 torch-cluster
 torch-spline-conv
-torch-geometric~=1.7
+torch-geometric~=1.7.2

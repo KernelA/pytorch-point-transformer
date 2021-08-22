@@ -1,6 +1,5 @@
 from typing import Dict, List
 import os
-import shutil
 import zipfile
 import pathlib
 import logging
