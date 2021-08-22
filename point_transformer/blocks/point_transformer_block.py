@@ -1,7 +1,4 @@
-from typing import Tuple
-
 from torch import nn
-import torch
 
 from ..layers import PointTransformerLayer
 from ..types import PointSetBatchInfo
@@ -17,8 +14,8 @@ class PointTransformerBlock(nn.Module):
 
     def forward(self, input: PointSetBatchInfo) -> PointSetBatchInfo:
         """input contains:
-            features [N x in_features] - node features
-            positions [N x num_coords] - position of points. By default num_coords is equal to 3.
+            features [B x N x in_features] - node features
+            positions [B x N x num_coords] - position of points. By default num_coords is equal to 3.
             batch - batch indices
         """
         features, positions, batch = input

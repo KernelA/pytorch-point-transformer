@@ -21,12 +21,13 @@ class ClsPointTransformer(nn.Module):
         for i in range(1, num_transformer_blocks + 1):
             classification_dim = out_features * 2 * i
             transformer_blocks.extend(
-                [TransitionDown(in_features=out_features, out_features=out_features * 2 * i,
+                [TransitionDown(in_features=out_features, out_features=classification_dim,
                                 num_neighbors=num_neighs, fps_sample_ratio=0.25),
                  PointTransformerBlock(in_out_features=classification_dim,
                                        compress_dim=out_features * i, num_neighbors=num_neighs)
                  ]
             )
+            out_features = classification_dim
 
         self.feature_extarctor = nn.Sequential(*transformer_blocks)
         self.classification_head = nn.Linear(classification_dim, num_classes)
@@ -34,5 +35,10 @@ class ClsPointTransformer(nn.Module):
     def forward(self, features, positions, batch):
         projected_features = self.init_mappin(features)
         new_features, _, new_batch = self.feature_extarctor((projected_features, positions, batch))
-        encoding = global_mean_pool(new_features, new_batch)
+        num_features = new_features.shape[-1]
+        encoding = global_mean_pool(new_features.view(-1, num_features), new_batch)
         return self.classification_head(encoding)
+
+    def predict_class(self, features, positions, batch):
+        predicted_logits = self.forward(features, positions, batch)
+        return predicted_logits.argmax(dim=-1)

@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from typing import Any, Optional
 
 from omegaconf import MISSING
 
 
 @dataclass
-class DataConfig:
+class PreprocessConfig:
     num_points: int = MISSING
-    data_root: str = MISSING
+    include_normals: bool = MISSING
