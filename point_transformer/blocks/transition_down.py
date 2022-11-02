@@ -22,12 +22,14 @@ class TransitionDown(nn.Module):
         )
         self._out_features = out_features
 
-    def forward(self, position: torch.Tensor, features: torch.Tensor, batch_indices: torch.LongTensor) -> PointSetBatchInfo:
+    def forward(self, fpb_data: PointSetBatchInfo) -> PointSetBatchInfo:
         """
             features [N x in_features] - point's features
             position [N x num_coords] - position of points. By default num_coords is equal to 3.
             batch [N x 1] - batch indices
         """
+        features, position, batch_indices = fpb_data
+
         fps_indices = fps(position, batch=batch_indices, ratio=self.fps_sample_ratio)
         out_features = self.mlp(features).view(-1, self._out_features)
 

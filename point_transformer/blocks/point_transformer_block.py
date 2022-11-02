@@ -15,13 +15,16 @@ class PointTransformerBlock(nn.Module):
             num_neighbors=num_neighbors)
         self.linear_decoder = nn.Linear(compress_dim, in_out_features)
 
-    def forward(self, features: torch.Tensor, positions: torch.Tensor, batch: torch.LongTensor) -> PointSetBatchInfo:
+    def forward(self, fpb_data: PointSetBatchInfo) -> PointSetBatchInfo:
         """input contains:
             features [B x N x in_features] - node features
             positions [B x N x num_coords] - position of points. By default num_coords is equal to 3.
             batch - batch indices
         """
+        features, positions, batch = fpb_data
+
         encoded_features = self.linear_encoder(features)
-        compressed_features, positions, batch = self.transformer(encoded_features, positions, batch)
+        compressed_features, positions, batch = self.transformer(
+            (encoded_features, positions, batch))
         output_features = self.linear_decoder(compressed_features)
         return features + output_features, positions, batch

@@ -14,8 +14,10 @@ def test_transition_up(sample_batch):
     downsample_pos = sample_batch.pos[:sample_size, ...]
     downsample_batch = sample_batch.batch[:sample_size, ...]
 
-    upsampled_features, upsampled_positions, _ = transition_up(downsample_features, downsample_pos, downsample_batch,
-                                                               sample_batch.x, sample_batch.pos, sample_batch.batch)
+    upsampled_features, upsampled_positions, _ = transition_up(
+        (downsample_features, downsample_pos, downsample_batch,
+         sample_batch.x, sample_batch.pos, sample_batch.batch)
+    )
 
     assert upsampled_features.shape[1] == out_features
     assert upsampled_features.shape[0] == sample_batch.x.shape[0]

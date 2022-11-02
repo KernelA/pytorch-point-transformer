@@ -28,11 +28,12 @@ class PointTransformerLayer(MessagePassing):
         self.knn_num_neighs = num_neighbors
         self._out_features = out_features
 
-    def forward(self, features: torch.Tensor, positions: torch.Tensor, batch: torch.LongTensor) -> PointSetBatchInfo:
+    def forward(self, fpb_data: PointSetBatchInfo) -> PointSetBatchInfo:
         """features [N x in_features] - node features
            positions [N x num_coords] - position of points. By default num_coords is equal to 3.
            batch [N x 1] - batch indices
         """
+        features, positions, batch = fpb_data
         edge_indices = knn_graph(features, k=self.knn_num_neighs, batch=batch)
         new_features = self.propagate(edge_indices, x=features, pos=positions)
         return new_features, positions, batch

@@ -28,13 +28,7 @@ class TransitionUp(nn.Module):
             nn.ReLU(inplace=True)
         )
 
-    def forward(self,
-                features_1: torch.Tensor,
-                positions_1: torch.Tensor,
-                batch_1: torch.LongTensor,
-                features_2: torch.Tensor,
-                positions_2: torch.Tensor,
-                batch_2: torch.LongTensor) -> PointSetBatchInfo:
+    def forward(self, fpb_data: TwoInputsType) -> PointSetBatchInfo:
         """
             features_1 [N x in_features] - node features
             positions_1 [N x num_coords] - position of points. By default num_coords is equal to 3.
@@ -44,6 +38,8 @@ class TransitionUp(nn.Module):
             positions_2 [N x num_coords] - position of points. By default num_coords is equal to 3.
             batch_2 [N x 1] - batch indices
         """
+        features_1, positions_1, batch_1, features_2, positions_2, batch_2 = fpb_data
+
         features_1 = self.linear(features_1)
         features_2 = self.linear_residual(features_2)
 
