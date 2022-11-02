@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 from torch.nn import functional as F
 from torch_geometric.nn import MessagePassing, knn_graph
@@ -27,22 +28,14 @@ class PointTransformerLayer(MessagePassing):
         self.knn_num_neighs = num_neighbors
         self._out_features = out_features
 
-    def forward(self, input: PointSetBatchInfo) -> PointSetBatchInfo:
-        """features [B x N x in_features] - node features
-           positions [B x N x num_coords] - position of points. By default num_coords is equal to 3.
-           batch - batch indices
+    def forward(self, features: torch.Tensor, positions: torch.Tensor, batch: torch.LongTensor) -> PointSetBatchInfo:
+        """features [N x in_features] - node features
+           positions [N x num_coords] - position of points. By default num_coords is equal to 3.
+           batch [N x 1] - batch indices
         """
-        features, positions, batch = input
-        batch_size = features.shape[0]
-        num_features = features.shape[-1]
-        num_coords = positions.shape[-1]
-        flatten_features = features.view(-1, num_features)
-        flatten_positions = positions.view(-1, num_coords)
-        edge_indices = knn_graph(flatten_features,
-                                 k=self.knn_num_neighs, batch=batch)
-
-        new_features = self.propagate(edge_indices, x=flatten_features, pos=flatten_positions)
-        return new_features.view(batch_size, -1, self._out_features), positions, batch
+        edge_indices = knn_graph(features, k=self.knn_num_neighs, batch=batch)
+        new_features = self.propagate(edge_indices, x=features, pos=positions)
+        return new_features, positions, batch
 
     def message(self, x_i, x_j, pos_i, pos_j):
         pos_encoding = self.positional_encoder(pos_i, pos_j)

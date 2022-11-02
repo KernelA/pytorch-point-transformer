@@ -1,2 +1,2 @@
-from .layers import PositionalEncoder, PointTransformerLayer, LinearBN
+from .layers import PositionalEncoder, PointTransformerLayer
 from .blocks import TransitionDown, PointTransformerBlock, TransitionUp

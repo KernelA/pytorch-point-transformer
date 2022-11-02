@@ -9,9 +9,9 @@ def test_transition_down(sample_batch):
     transition_down = TransitionDown(
         in_features=in_features, out_features=out_features, num_neighbors=10, fps_sample_ratio=0.5)
 
-    new_features, new_postions, new_batch = transition_down(
-        (sample_batch.x, sample_batch.pos, sample_batch.batch))
+    new_features, new_positions, new_batch = transition_down(
+        sample_batch.x, sample_batch.pos, sample_batch.batch)
 
-    assert new_features.shape[-1] == out_features
-    assert new_features.shape[:2] == new_postions.shape[:2]
-    assert new_features.shape[1] == sample_batch.x.shape[1] // 2
+    assert new_features.shape[1] == out_features
+    assert new_features.shape[0] == new_positions.shape[0]
+    assert new_features.shape[0] == sample_batch.x.shape[0] // 2

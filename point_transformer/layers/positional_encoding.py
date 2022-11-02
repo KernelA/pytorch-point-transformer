@@ -15,7 +15,7 @@ class PositionalEncoder(nn.Module):
         assert pos_i.shape[-1] == pos_j.shape[-1]
         """Positional encoding
 
-        pos_i: [B x N x num_coords]
-        pos_j: [B x N x num_coords]
+            pos_i: [N x num_coords]
+            pos_j: [N x num_coords]
         """
         return self.mlp(pos_i - pos_j)
