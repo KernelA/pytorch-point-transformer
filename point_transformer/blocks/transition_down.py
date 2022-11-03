@@ -31,7 +31,7 @@ class TransitionDown(nn.Module):
         features, position, batch_indices = fpb_data
 
         fps_indices = fps(position, batch=batch_indices, ratio=self.fps_sample_ratio)
-        out_features = self.mlp(features).view(-1, self._out_features)
+        out_features = self.mlp(features)
 
         new_batch_indices = batch_indices[fps_indices]
 

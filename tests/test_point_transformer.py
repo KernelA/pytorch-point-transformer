@@ -4,6 +4,7 @@ from point_transformer import PointTransformerLayer, PointTransformerBlock
 from .conftest import NUM_COORDS
 
 
+@torch.no_grad()
 def test_point_transformer_layer(sample_batch):
     in_features = NUM_COORDS
     out_features = 16
@@ -19,6 +20,20 @@ def test_point_transformer_layer(sample_batch):
     torch.testing.assert_close(new_batch, sample_batch.batch)
 
 
+@torch.no_grad()
+def test_jit_transformer_layer(sample_batch):
+    in_features = NUM_COORDS
+    out_features = 16
+    num_neighs = 6
+    point_transformer = PointTransformerLayer(in_features=in_features,
+                                              out_features=out_features, num_neighbors=num_neighs).jittable()
+
+    point_transformer = torch.jit.script(point_transformer)
+
+    point_transformer((sample_batch.x, sample_batch.pos, sample_batch.batch))
+
+
+@torch.no_grad()
 def test_transformer_block(sample_batch):
     in_features = NUM_COORDS
 

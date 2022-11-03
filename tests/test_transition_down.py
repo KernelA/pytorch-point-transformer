@@ -1,8 +1,11 @@
+import torch
+
 from point_transformer import TransitionDown
 
 from .conftest import NUM_COORDS
 
 
+@torch.no_grad()
 def test_transition_down(sample_batch):
     in_features = NUM_COORDS
     out_features = 16

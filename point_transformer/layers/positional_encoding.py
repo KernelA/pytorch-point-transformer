@@ -7,7 +7,7 @@ class PositionalEncoder(nn.Module):
         super().__init__()
         self.mlp = nn.Sequential(
             nn.Linear(num_coords, hid_dim),
-            nn.ReLU(),
+            nn.ReLU(inplace=True),
             nn.Linear(hid_dim, output_dim)
         )
 

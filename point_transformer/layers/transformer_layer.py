@@ -8,6 +8,8 @@ from ..types import PointSetBatchInfo
 
 
 class PointTransformerLayer(MessagePassing):
+    propagate_type = {"x": torch.Tensor, "pos": torch.Tensor}
+
     def __init__(self, *,
                  in_features: int,
                  out_features: int,
@@ -34,11 +36,12 @@ class PointTransformerLayer(MessagePassing):
            batch [N x 1] - batch indices
         """
         features, positions, batch = fpb_data
-        edge_indices = knn_graph(features, k=self.knn_num_neighs, batch=batch)
-        new_features = self.propagate(edge_indices, x=features, pos=positions)
+        edge_indices = knn_graph(features, k=self.knn_num_neighs,
+                                 batch=batch, flow=self.flow, loop=False)
+        new_features = self.propagate(edge_indices, x=features, pos=positions, size=None)
         return new_features, positions, batch
 
-    def message(self, x_i, x_j, pos_i, pos_j):
+    def message(self, x_i: torch.Tensor, x_j: torch.Tensor, pos_i: torch.Tensor, pos_j: torch.Tensor) -> torch.Tensor:
         pos_encoding = self.positional_encoder(pos_i, pos_j)
         return F.softmax(self.gamma(self.phi(x_i) - self.psi(x_j) + pos_encoding),
                          dim=-1) * (self.alpha(x_j) + pos_encoding)

@@ -6,13 +6,17 @@ from ..types import PointSetBatchInfo
 
 
 class PointTransformerBlock(nn.Module):
-    def __init__(self, *, in_out_features: int, compress_dim: int, num_neighbors: int):
+    def __init__(self, *, in_out_features: int, compress_dim: int, num_neighbors: int, is_jit: bool = False):
         super().__init__()
         self.linear_encoder = nn.Linear(in_out_features, compress_dim)
         self.transformer = PointTransformerLayer(
             in_features=compress_dim,
             out_features=compress_dim,
             num_neighbors=num_neighbors)
+
+        if is_jit:
+            self.transformer = self.transformer.jittable()
+
         self.linear_decoder = nn.Linear(compress_dim, in_out_features)
 
     def forward(self, fpb_data: PointSetBatchInfo) -> PointSetBatchInfo:
