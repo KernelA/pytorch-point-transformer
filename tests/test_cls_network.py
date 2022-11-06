@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from model import ClsPointTransformer
+from point_transformer.models import ClsPointTransformer
 
 from .conftest import NUM_COORDS
 

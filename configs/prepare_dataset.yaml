@@ -1,0 +1,16 @@
+hydra:
+  run:
+    dir: . 
+  output_subdir: null 
+
+
+defaults:
+  - datasets: simple_shapes
+  - transforms@pre_transform: simple_shapes/pre_transform
+  - _self_
+
+datasets:
+  train_load_sett:
+    pre_transform: ${pre_transform}
+  test_load_sett:
+    pre_transform: ${..train_load_sett.pre_transform}

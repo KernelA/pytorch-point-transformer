@@ -1,1 +1,17 @@
-_target_: data.simple_shapes.SimpleShapesDataset
+_target_: training.data.simple_shapes.SimpleShapesDataset
+data_root: ./datasets/simple_shapes
+path_to_zip: ./datasets/raw/simple-shapes-dataset-v2.zip
+train_load_sett: 
+  _target_: training.data.dataloader_settings.LoadSettings
+  num_workers: 2
+  batch_size: 64
+  pre_transform: null
+  pre_filter: null
+  transform: null
+test_load_sett:
+  _target_: training.data.dataloader_settings.LoadSettings
+  num_workers: 2
+  batch_size: 128
+  pre_transform: null
+  pre_filter: null
+  transform: null

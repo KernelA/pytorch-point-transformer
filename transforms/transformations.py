@@ -1,33 +1,48 @@
-from data.mesh_data import BatchedData
+from torch_geometric.transforms import BaseTransform
+from torch_geometric.data import Data
 import torch
 import trimesh
 from trimesh import sample
 import numpy as np
 
 
-class FeaturesFromPos:
-    def __call__(self, data):
-        data.x = data.pos.clone()
+class FeaturesFromPos(BaseTransform):
+    def __call__(self, data: Data) -> Data:
+        if "x" in data:
+            data.x = torch.cat((data.x, data.pos.clone()), dim=-1)
+        else:
+            data.x = data.pos.clone()
         return data
 
 
-class FusePosAndNormals:
-    def __call__(self, data):
-        data.x = torch.cat((data.x, data.normal), dim=-1)
+class PosToFloat32(BaseTransform):
+    def __call__(self, data: Data) -> Data:
+        data.pos = data.pos.to(torch.float32)
+        return data
+
+
+class FeaturesFromNormal(BaseTransform):
+    def __call__(self, data: Data) -> Data:
+        if "x" in data:
+            data.x = torch.cat((data.x, data.normal), dim=-1)
+        else:
+            data.x = data.normal.clone()
+
         del data.normal
         return data
 
 
-class SamplePoints:
+class SamplePoints(BaseTransform):
     def __init__(self, num_points: int, include_normals: bool = False):
         self.num_points = num_points
         self.include_normals = include_normals
 
-    def __call__(self, data):
-        # data.face has shape [3 x N]
-        mesh = trimesh.Trimesh(vertices=data.pos.numpy(), faces=data.face.T.numpy())
+    def __call__(self, data: Data) -> Data:
+        breakpoint()
+        mesh = trimesh.Trimesh(vertices=data.pos.numpy(), face=data.face.numpy())
         samples, face_indices = sample.sample_surface(mesh, count=self.num_points)
-        new_data = BatchedData(x=data.x)
+
+        new_data = Data()
 
         for key in data.keys:
             if key not in ("pos", "face", "normal"):
@@ -41,7 +56,7 @@ class SamplePoints:
         return new_data
 
 
-class TestPointSample:
+class TestPointSample(BaseTransform):
     def __init__(self, num_points: int = 1024):
         self.point_sampler = SamplePoints(num_points=num_points)
 

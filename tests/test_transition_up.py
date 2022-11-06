@@ -4,10 +4,11 @@ from point_transformer import TransitionUp
 
 from .conftest import NUM_COORDS, NUM_POINTS
 
+
 @torch.no_grad()
 def test_transition_up(sample_batch):
     in_features = NUM_COORDS
-    out_features = 16
+    out_features = 8
     transition_up = TransitionUp(
         in_features=in_features, out_features=out_features)
 

@@ -8,7 +8,7 @@ from .conftest import NUM_COORDS
 @torch.no_grad()
 def test_transition_down(sample_batch):
     in_features = NUM_COORDS
-    out_features = 16
+    out_features = 8
     transition_down = TransitionDown(
         in_features=in_features, out_features=out_features, num_neighbors=10, fps_sample_ratio=0.5)
 

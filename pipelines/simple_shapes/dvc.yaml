@@ -1,0 +1,61 @@
+vars:
+  - ../../configs/datasets/simple_shapes.yaml:path_to_zip,data_root
+  - config_name: train_simple_shapes
+
+stages:
+  download-simple-shapes:
+    wdir: ../..
+    cmd: python ./gdownloader.py --url https://drive.google.com/uc?id=1xM5diKjMbp_PfNu--JG2A-ZeFk9TLkks --out ${path_to_zip}
+    deps:
+      - ./gdownloader.py
+    outs:
+      - ${path_to_zip}
+
+  prepare-simple-shapes:
+    wdir: ../..
+    cmd: python ./prepare_data.py datasets=simple_shapes
+    deps:
+      - ./configs/datasets/simple_shapes.yaml
+      - ${path_to_zip}
+      - ./configs/prepare_dataset.yaml
+      - ./configs/transforms/simple_shapes
+      - ./prepare_data.py
+      - ./training/data/simple_shapes.py
+    outs:
+      - ${data_root}
+
+  prepare-config-simple-shapes:
+    wdir: ../..
+    cmd: python ./resolve_config.py -cn ${config_name}
+    vars:
+      - ./configs/train_simple_shapes.yaml:base_exp_dir
+    deps:
+      - ./resolve_config.py
+      - ./configs/${config_name}.yaml
+    outs:
+      - ${base_exp_dir}/config.yaml
+
+  train-simple-shapes:
+    wdir: ../..
+    vars:
+      - ./configs/train_simple_shapes.yaml:base_exp_dir,exp_dir
+    cmd: python ./train.py -cn ${config_name}
+    params:
+      - ${base_exp_dir}/config.yaml:
+        - params
+        - optimizer
+        - scheduler
+        - model
+        - train_transform
+        - test_transform
+    deps:
+      - ./train.py
+      - ./point_transformer
+      - ./training/metrics
+      - ./training/trainers
+      - ${data_root}
+      - ${base_exp_dir}/config.yaml
+    outs:
+      - ${base_exp_dir}/${exp_dir}:
+          cache: false
+

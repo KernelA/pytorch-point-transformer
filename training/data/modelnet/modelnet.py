@@ -10,7 +10,7 @@ from torch_geometric.io.off import parse_off
 import tqdm
 
 import log_set
-from .mesh_data import BatchedData
+from ..mesh_data import BatchedData
 
 
 class ModelNet(data.Dataset):

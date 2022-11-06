@@ -1,9 +1,7 @@
 import torch
 import pytest
 
-from torch_geometric.data import Batch
-
-from data import BatchedData
+from torch_geometric.data import Batch, Data
 
 NUM_COORDS = 3
 NUM_POINTS = 10
@@ -18,7 +16,7 @@ def sample_batch():
     points = torch.randn((NUM_POINTS, NUM_COORDS), generator=generator)
     features = points.clone()
 
-    pointcloud_sample = BatchedData(x=features, pos=points)
+    pointcloud_sample = Data(x=features, pos=points)
 
     samples = [pointcloud_sample, pointcloud_sample.clone()]
 

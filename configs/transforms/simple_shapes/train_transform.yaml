@@ -1,0 +1,8 @@
+_target_: torch_geometric.transforms.Compose
+transforms:
+    - _target_: torch_geometric.transforms.RandomRotate
+      axis: 0
+      degrees: 180
+    - _target_: torch_geometric.transforms.RandomRotate
+      axis: 2
+      degrees: 180
