@@ -13,27 +13,25 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache
           key: ${{ runner.os }}-${{ hashFiles('**/requirements.*.txt') }}
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
-          architecture: "x64"
+          python-version: "3.9"
 
       - name: Install wheel
         run: pip install wheel
 
       - name: Install dependencies
         run: |
-          pip install -r ./requirements.torch.cpu.txt
-          pip install -r ./requirements.cpu.txt
-          pip install -r ./requirements.dev.txt
+          pip install -r ./requirements.torch.cpu.txt 
+          pip install -r ./requirements.cpu.txt -r ./requirements.dev.txt
 
       - name: Run tests
-        run: pytest ./tests
+        run: pytest --maxfail=1 ./tests
