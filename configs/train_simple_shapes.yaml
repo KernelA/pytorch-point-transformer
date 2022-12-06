@@ -11,6 +11,7 @@ defaults:
   - scheduler: multistep
   - transforms@train_transform: simple_shapes/train_transform
   - transforms@test_transform: simple_shapes/test_transform
+  - transforms@pre_transform: simple_shapes/pre_transform
   - _self_
 
 base_exp_dir: "./exp/simple_shapes"
@@ -67,9 +68,11 @@ trainer:
 datasets:
   train_load_sett:
     transform: ${train_transform}
+    pre_transform: ${pre_transform}
     num_workers: 1
     batch_size: ${params.train_batch_size}
   test_load_sett:
     transform: ${test_transform}
+    pre_transform: ${pre_transform}
     num_workers: 1
     batch_size: ${params.test_batch_size}

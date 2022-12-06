@@ -42,15 +42,15 @@ stages:
     cmd: python ./resolve_config.py -cn train_simple_shapes
     deps:
     - path: ./configs/train_simple_shapes.yaml
-      md5: a2917b9d06d092eed9a865938f36ec72
-      size: 1903
+      md5: 9d217c9370edd6dfe2b5ccd3e52587dc
+      size: 2036
     - path: ./resolve_config.py
       md5: 6169ae480892976a0060dbed5149cf31
       size: 328
     outs:
     - path: ./exp/simple_shapes/config.yaml
-      md5: ea51ca7755b6192d8b5e603d0ac428d0
-      size: 3143
+      md5: febe9c669e73efb9cd874218943a2018
+      size: 4471
   train-simple-shapes:
     cmd: python ./train.py -cn train_simple_shapes
     deps:
@@ -59,15 +59,15 @@ stages:
       size: 33240140
       nfiles: 4
     - path: ./exp/simple_shapes/config.yaml
-      md5: ea51ca7755b6192d8b5e603d0ac428d0
-      size: 3143
+      md5: febe9c669e73efb9cd874218943a2018
+      size: 4471
     - path: ./point_transformer
       md5: 27be713e89484f96b2663e2bc895b2f6.dir
       size: 35277
       nfiles: 32
     - path: ./train.py
-      md5: db12353429f4399ade5037a9604ab915
-      size: 1416
+      md5: 568f8cf5063d6399b4f62dbce20f1206
+      size: 1547
     - path: ./training/metrics
       md5: c698c8f22d3eab27ebfec2ee55d45d29.dir
       size: 2221
@@ -123,6 +123,6 @@ stages:
             degrees: 180
     outs:
     - path: ./exp/simple_shapes/exp
-      md5: b0ab47536f4081ececf7f8f56b889a45.dir
-      size: 153533546
-      nfiles: 5
+      md5: ea78a3b6d12aee858580db039ba827fc.dir
+      size: 153534811
+      nfiles: 6

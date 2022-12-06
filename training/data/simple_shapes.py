@@ -102,24 +102,29 @@ class SimpleShapesDataset(LightningDataModule):
         self.test_dataset = None
 
     def setup(self, stage: str) -> None:
-        self.train_dataset = SimpleShapesInMemory(
-            data_root=self.data_root,
-            path_to_zip=self.path_to_zip,
-            split_type="train",
-            transform=self.train_load_set.transform,
-            pre_filter=self.train_load_set.pre_filter,
-            pre_transform=self.train_load_set.pre_transform)
+        if stage == "train":
+            self.train_dataset = SimpleShapesInMemory(
+                data_root=self.data_root,
+                path_to_zip=self.path_to_zip,
+                split_type="train",
+                transform=self.train_load_set.transform,
+                pre_filter=self.train_load_set.pre_filter,
+                pre_transform=self.train_load_set.pre_transform)
 
-        self.test_dataset = SimpleShapesInMemory(
-            path_to_zip=self.path_to_zip,
-            data_root=self.data_root,
-            split_type="test",
-            transform=self.test_load_sett.transform,
-            pre_filter=self.test_load_sett.pre_filter,
-            pre_transform=self.test_load_sett.pre_transform)
+        if stage == "validate":
+            self.test_dataset = SimpleShapesInMemory(
+                path_to_zip=self.path_to_zip,
+                data_root=self.data_root,
+                split_type="test",
+                transform=self.test_load_sett.transform,
+                pre_filter=self.test_load_sett.pre_filter,
+                pre_transform=self.test_load_sett.pre_transform)
 
     def get_class_mapping(self) -> Dict[str, int]:
-        return self.train_dataset.class_mapping()
+        if self.train_dataset is not None:
+            return self.train_dataset.class_mapping()
+        if self.test_dataset is not None:
+            return self.test_dataset.class_mapping()
 
     def train_dataloader(self):
         return loader.DataLoader(self.train_dataset,

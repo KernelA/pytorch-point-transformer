@@ -58,12 +58,15 @@ class ClsPointTransformer(nn.Module):
         self.classification_head = nn.Linear(classification_dim, num_classes)
 
     def forward(self, fpb_data: PointSetBatchInfo):
+        encoding = self.get_embedding(fpb_data)
+        return self.classification_head(encoding)
+
+    def get_embedding(self, fpb_data: PointSetBatchInfo):
         features, positions, batch = fpb_data
         assert positions.shape[1] == 3, "Expected 3D coordinates"
         projected_features = self.init_mapping(features)
         new_features, _, new_batch = self.feature_extractor((projected_features, positions, batch))
-        encoding = global_mean_pool(new_features, new_batch)
-        return self.classification_head(encoding)
+        return global_mean_pool(new_features, new_batch)
 
     @torch.jit.unused
     def forward_data(self, data: Union[Data, Batch]):
@@ -73,5 +76,9 @@ class ClsPointTransformer(nn.Module):
     def predict_class_data(self, data: Union[Data, Batch]) -> torch.Tensor:
         return self.predict_class(self.forward_data(data))
 
+    @torch.jit.unused
+    def get_embedding_data(self, data: Union[Data, Batch]) -> torch.Tensor:
+        return self.get_embedding((data.x, data.pos, data.batch))
+
     def predict_class(self, predicted_logits: torch.Tensor) -> torch.Tensor:
-        return predicted_logits.argmax(dim=-1)
+        return predicted_logits.argmax(dim = -1)

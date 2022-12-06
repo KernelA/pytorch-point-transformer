@@ -1,4 +1,5 @@
 import pathlib
+import json
 
 import hydra
 from omegaconf import OmegaConf
@@ -28,6 +29,9 @@ def main(config):
     config_dir = exp_dir / config.config_dir
     config_dir.mkdir(exist_ok=True)
     OmegaConf.save(config=config, f=config_dir / "config.yaml", resolve=True)
+
+    with open(config_dir / "class_mapping.json", "w", encoding="utf-8") as f:
+        json.dump(class_mapping, f)
 
     checkpoint_dir = exp_dir / config.checkpoint_dir
     checkpoint_dir.mkdir(exist_ok=True, parents=True)

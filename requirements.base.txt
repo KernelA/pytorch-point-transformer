@@ -9,3 +9,7 @@ trimesh~=3.9.0
 gdown~=3.13.0
 torchmetrics~=0.10.2
 pytorch-lightning~=1.8.0
+ipywidgets>=7.0,<8.0 
+pyrender~=0.1.45
+kaleido
+plotly==5.11.0
