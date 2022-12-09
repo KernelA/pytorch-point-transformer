@@ -1,0 +1,11 @@
+_target_: torch_geometric.transforms.Compose
+transforms:
+  - _target_: torch_geometric.transforms.NormalizeScale
+  - _target_: transforms.transformations.PosToFloat32
+  - _target_: torch_geometric.transforms.SamplePoints
+    num: 512
+    remove_faces: true
+    include_normals: true
+  - _target_: transforms.transformations.FeaturesFromPos
+  - _target_: transforms.transformations.FeaturesFromNormal
+  

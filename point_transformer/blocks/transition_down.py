@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 from torch_geometric.nn import fps, knn, max_pool_x
 
@@ -14,26 +15,35 @@ class TransitionDown(nn.Module):
         super().__init__()
         self.fps_sample_ratio = fps_sample_ratio
         self.num_neighbors = num_neighbors
-        self.mlp = nn.Sequential(nn.Linear(in_features, out_features),
-                                 nn.BatchNorm1d(num_features=out_features),
-                                 nn.ReLU()
-                                 )
+        self.mlp = nn.Sequential(
+            nn.Linear(in_features, out_features),
+            nn.BatchNorm1d(out_features),
+            nn.ReLU(inplace=True)
+        )
+        self._out_features = out_features
 
-    def forward(self, input: PointSetBatchInfo) -> PointSetBatchInfo:
-        """input contains:
-            features [N x in_features] - node features
-            positions [N x num_coords] - position of points. By default num_coords is equal to 3.
-            batch - batch indices
+    def forward(self, fpb_data: PointSetBatchInfo) -> PointSetBatchInfo:
         """
-        features, positions, batch = input
-        fps_indices = fps(positions, batch=batch, ratio=self.fps_sample_ratio)
+            features [N x in_features] - point's features
+            position [N x num_coords] - position of points. By default num_coords is equal to 3.
+            batch [N x 1] - batch indices
+        """
+        features, position, batch_indices = fpb_data
+
+        fps_indices = fps(position, batch=batch_indices, ratio=self.fps_sample_ratio)
         out_features = self.mlp(features)
 
+        new_batch_indices = batch_indices[fps_indices]
+
         # [2 x num_neighbors * fps_indices]
-        nearthest_indices = knn(
-            features, features[fps_indices], k=self.num_neighbors, batch_x=batch, batch_y=batch[fps_indices])
+        # self point in knn
+        nearest_indices = knn(
+            features, features[fps_indices],
+            k=self.num_neighbors,
+            batch_x=batch_indices,
+            batch_y=new_batch_indices)
 
         new_features = max_pool_x(
-            cluster=nearthest_indices[0, :], x=out_features[nearthest_indices[1, :]], batch=batch[nearthest_indices[1, :]])[0]
+            cluster=nearest_indices[0, :], x=out_features[nearest_indices[1, :]], batch=batch_indices[nearest_indices[1, :]])[0]
 
-        return new_features, positions[fps_indices], batch[fps_indices]
+        return new_features, position[fps_indices], new_batch_indices

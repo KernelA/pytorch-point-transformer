@@ -1,0 +1,254 @@
+schema: '2.0'
+stages:
+  download-simple-shapes:
+    cmd: python ./gdownloader.py --url https://drive.google.com/uc?id=1xM5diKjMbp_PfNu--JG2A-ZeFk9TLkks
+      --out ./datasets/raw/simple-shapes-dataset-v2.zip
+    deps:
+    - path: ./gdownloader.py
+      md5: 1ba606b1d975c78d8694b491ced43688
+      size: 456
+    outs:
+    - path: ./datasets/raw/simple-shapes-dataset-v2.zip
+      md5: 2d5e4e21ffe498e34588f9bfbae18d98
+      size: 10365251
+  prepare-simple-shapes:
+    cmd: python ./prepare_data.py -cn train_simple_shapes
+    deps:
+    - path: ./configs/datasets/simple_shapes.yaml
+      md5: 43cd33048a5551d92ba50c1798c77eee
+      size: 507
+    - path: ./configs/prepare_dataset.yaml
+      md5: a3062335adb739db6ffc0a8414f4c051
+      size: 310
+    - path: ./configs/transforms/simple_shapes
+      md5: 73a48cb8adc25ad20914f8e98bd4b199.dir
+      size: 898
+      nfiles: 3
+    - path: ./datasets/raw/simple-shapes-dataset-v2.zip
+      md5: 2d5e4e21ffe498e34588f9bfbae18d98
+      size: 10365251
+    - path: ./prepare_data.py
+      md5: 2ee218c9ae61d69b61a91433ac3345fe
+      size: 311
+    - path: ./training/data/simple_shapes.py
+      md5: 87d838f8c754a07e804f6b15f942c717
+      size: 5320
+    outs:
+    - path: ./datasets/simple_shapes
+      md5: 6f18211595f4e4f08145c20543d26207.dir
+      size: 33240140
+      nfiles: 4
+  prepare-config-simple-shapes:
+    cmd: python ./resolve_config.py -cn train_simple_shapes
+    deps:
+    - path: ./configs/train_simple_shapes.yaml
+      md5: 9d217c9370edd6dfe2b5ccd3e52587dc
+      size: 2036
+    - path: ./resolve_config.py
+      md5: 6169ae480892976a0060dbed5149cf31
+      size: 328
+    outs:
+    - path: ./exp/simple_shapes/config.yaml
+      md5: febe9c669e73efb9cd874218943a2018
+      size: 4471
+  train-simple-shapes:
+    cmd: python ./train.py -cn train_simple_shapes
+    deps:
+    - path: ./datasets/simple_shapes
+      md5: 98a45613a61306a96d14699372054c61.dir
+      size: 33240140
+      nfiles: 4
+    - path: ./exp/simple_shapes/config.yaml
+      md5: febe9c669e73efb9cd874218943a2018
+      size: 4471
+    - path: ./point_transformer
+      md5: 27be713e89484f96b2663e2bc895b2f6.dir
+      size: 35277
+      nfiles: 32
+    - path: ./train.py
+      md5: 568f8cf5063d6399b4f62dbce20f1206
+      size: 1547
+    - path: ./training/metrics
+      md5: c698c8f22d3eab27ebfec2ee55d45d29.dir
+      size: 2221
+      nfiles: 4
+    - path: ./training/trainers
+      md5: d9805bab8b426825fb911b8fe831404d.dir
+      size: 9561
+      nfiles: 5
+    params:
+      exp/simple_shapes/config.yaml:
+        model:
+          _target_: point_transformer.models.cls_network.ClsPointTransformer
+          in_features: 6
+          num_transformer_blocks: 3
+          num_classes: ???
+        optimizer:
+          _target_: torch.optim.Adam
+          lr: 0.0001
+          betas:
+          - 0.9
+          - 0.999
+          amsgrad: true
+          weight_decay: 0.0001
+        params:
+          seed: 300
+          precision: 32
+          max_epochs: 10
+          train_batch_size: 32
+          test_batch_size: 128
+        scheduler:
+          _target_: torch.optim.lr_scheduler.MultiStepLR
+          milestones:
+          - 120
+          - 160
+          gamma: 0.1
+        test_transform:
+          _target_: torch_geometric.transforms.Compose
+          transforms:
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 0
+            degrees: 180
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 2
+            degrees: 180
+        train_transform:
+          _target_: torch_geometric.transforms.Compose
+          transforms:
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 0
+            degrees: 180
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 2
+            degrees: 180
+    outs:
+    - path: ./exp/simple_shapes/exp
+      md5: ea78a3b6d12aee858580db039ba827fc.dir
+      size: 153534811
+      nfiles: 6
+  download:
+    cmd: python ./gdownloader.py --url https://drive.google.com/uc?id=1xM5diKjMbp_PfNu--JG2A-ZeFk9TLkks
+      --out ./datasets/raw/simple-shapes-dataset-v2.zip
+    deps:
+    - path: ./gdownloader.py
+      md5: 1ba606b1d975c78d8694b491ced43688
+      size: 456
+    outs:
+    - path: ./datasets/raw/simple-shapes-dataset-v2.zip
+      md5: 2d5e4e21ffe498e34588f9bfbae18d98
+      size: 10365251
+  prepare-dataset:
+    cmd: python ./prepare_data.py -cn train_simple_shapes
+    deps:
+    - path: ./configs/datasets/simple_shapes.yaml
+      md5: 43cd33048a5551d92ba50c1798c77eee
+      size: 507
+    - path: ./configs/prepare_dataset.yaml
+      md5: a3062335adb739db6ffc0a8414f4c051
+      size: 310
+    - path: ./configs/transforms/simple_shapes
+      md5: 73a48cb8adc25ad20914f8e98bd4b199.dir
+      size: 898
+      nfiles: 3
+    - path: ./datasets/raw/simple-shapes-dataset-v2.zip
+      md5: 2d5e4e21ffe498e34588f9bfbae18d98
+      size: 10365251
+    - path: ./prepare_data.py
+      md5: ec18bd1bb31f4c59e72a20db9b41ca30
+      size: 313
+    - path: ./training/data/simple_shapes.py
+      md5: 933493e62733324cf4742193df3ee95f
+      size: 5417
+    outs:
+    - path: ./datasets/simple_shapes
+      md5: 9fb11057af6ef0c367b2c874ec2d1efa.dir
+      size: 33240140
+      nfiles: 4
+  prepare-config:
+    cmd: python ./resolve_config.py -cn train_simple_shapes
+    deps:
+    - path: ./configs/train_simple_shapes.yaml
+      md5: 049a46a21398ebf086161b69de241b08
+      size: 2063
+    - path: ./resolve_config.py
+      md5: 6169ae480892976a0060dbed5149cf31
+      size: 328
+    outs:
+    - path: ./exp/simple_shapes/config.yaml
+      md5: 5788c320f993a6e4059fa5e661ce188f
+      size: 4498
+  train:
+    cmd: python ./train.py -cn train_simple_shapes
+    deps:
+    - path: ./datasets/simple_shapes
+      md5: 9fb11057af6ef0c367b2c874ec2d1efa.dir
+      size: 33240140
+      nfiles: 4
+    - path: ./exp/simple_shapes/config.yaml
+      md5: 5788c320f993a6e4059fa5e661ce188f
+      size: 4498
+    - path: ./point_transformer
+      md5: ae5cf233e79bebc8a452445ae80598a5.dir
+      size: 35928
+      nfiles: 32
+    - path: ./train.py
+      md5: f6df83b8b9a1377abeaf95cc03d9e8d2
+      size: 1581
+    - path: ./training/metrics
+      md5: c698c8f22d3eab27ebfec2ee55d45d29.dir
+      size: 2221
+      nfiles: 4
+    - path: ./training/trainers
+      md5: d9805bab8b426825fb911b8fe831404d.dir
+      size: 9561
+      nfiles: 5
+    params:
+      exp/simple_shapes/config.yaml:
+        model:
+          _target_: point_transformer.models.cls_network.ClsPointTransformer
+          in_features: 6
+          num_transformer_blocks: 3
+          num_classes: ???
+        optimizer:
+          _target_: torch.optim.Adam
+          lr: 0.0001
+          betas:
+          - 0.9
+          - 0.999
+          amsgrad: true
+          weight_decay: 0.0001
+        params:
+          seed: 300
+          precision: 32
+          max_epochs: 10
+          train_batch_size: 32
+          test_batch_size: 128
+        scheduler:
+          _target_: torch.optim.lr_scheduler.MultiStepLR
+          milestones:
+          - 120
+          - 160
+          gamma: 0.1
+        test_transform:
+          _target_: torch_geometric.transforms.Compose
+          transforms:
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 0
+            degrees: 180
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 2
+            degrees: 180
+        train_transform:
+          _target_: torch_geometric.transforms.Compose
+          transforms:
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 0
+            degrees: 180
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 2
+            degrees: 180
+    outs:
+    - path: ./exp/simple_shapes/exp
+      md5: 1859ec775c5aec3fae44d157edd609a4.dir
+      size: 153575679
+      nfiles: 6

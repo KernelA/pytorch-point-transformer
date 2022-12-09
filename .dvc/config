@@ -1,0 +1,6 @@
+[core]
+    remote = remote
+[hydra]
+    enabled = false
+    config_dir = configs
+    config_name = train_simple_shapes

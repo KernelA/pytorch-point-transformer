@@ -1,13 +1,14 @@
 import torch
 import pytest
-from torch_geometric import data
+
+from torch_geometric.data import Batch, Data
 
 NUM_COORDS = 3
 NUM_POINTS = 10
 SEED = 20
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def sample_batch():
     generator = torch.Generator()
     generator.manual_seed(SEED)
@@ -15,8 +16,8 @@ def sample_batch():
     points = torch.randn((NUM_POINTS, NUM_COORDS), generator=generator)
     features = points.clone()
 
-    pointcloud_sample = data.Data(x=features, pos=points)
+    pointcloud_sample = Data(x=features, pos=points)
+
     samples = [pointcloud_sample, pointcloud_sample.clone()]
 
-    batch = data.Batch.from_data_list(samples)
-    return batch
+    return Batch.from_data_list(samples)

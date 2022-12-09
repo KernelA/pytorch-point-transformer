@@ -1,0 +1,58 @@
+vars:
+  - ../../configs/datasets/modelnet10.yaml:path_to_zip,data_root
+  - config_name: train_modelnet10
+  - ../../configs/train_modelnet10.yaml:base_exp_dir,exp_dir
+
+stages:
+  download-dataset:
+    wdir: ../..
+    cmd: dw http://vision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip ${path_to_zip}
+    outs:
+      - ${path_to_zip}:
+          persist: true
+
+  prepare-dataset:
+    wdir: ../..
+    cmd: python ./prepare_data.py -cn train_modelnet10
+    deps:
+      - ./configs/datasets/modelnet10.yaml
+      - ${path_to_zip}
+      - ./configs/prepare_dataset.yaml
+      - ./configs/transforms/simple_shapes
+      - ./prepare_data.py
+      - ./training/data/modelnet
+    outs:
+      - ${data_root}:
+          cache: false
+
+  prepare-config:
+    wdir: ../..
+    cmd: python ./resolve_config.py -cn ${config_name} model.num_transformer_blocks=5
+    deps:
+      - ./resolve_config.py
+      - ./configs/${config_name}.yaml
+    outs:
+      - ${base_exp_dir}/config.yaml
+
+  train:
+    wdir: ../..
+    cmd: python ./train.py -cn ${config_name}
+    params:
+      - ${base_exp_dir}/config.yaml:
+        - params
+        - optimizer
+        - scheduler
+        - model
+        - train_transform
+        - test_transform
+    deps:
+      - ./train.py
+      - ./point_transformer
+      - ./training/metrics
+      - ./training/trainers
+      - ${data_root}
+      - ${base_exp_dir}/config.yaml
+    outs:
+      - ${base_exp_dir}/${exp_dir}:
+          cache: false
+

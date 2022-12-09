@@ -7,7 +7,7 @@ class PositionalEncoder(nn.Module):
         super().__init__()
         self.mlp = nn.Sequential(
             nn.Linear(num_coords, hid_dim),
-            nn.ReLU(),
+            nn.ReLU(inplace=True),
             nn.Linear(hid_dim, output_dim)
         )
 
@@ -15,7 +15,7 @@ class PositionalEncoder(nn.Module):
         assert pos_i.shape[-1] == pos_j.shape[-1]
         """Positional encoding
 
-        pos_i: [N x num_coords]
-        pos_j: [N x num_coords]
+            pos_i: [N x num_coords]
+            pos_j: [N x num_coords]
         """
         return self.mlp(pos_i - pos_j)

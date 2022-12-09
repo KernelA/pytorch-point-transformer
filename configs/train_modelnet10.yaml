@@ -1,0 +1,78 @@
+hydra:
+  run:
+    dir: . 
+  output_subdir: null 
+
+
+defaults:
+  - datasets: modelnet10
+  - optimizer: adam
+  - model: cls_model
+  - scheduler: multistep
+  - transforms@train_transform: simple_shapes/train_transform
+  - transforms@test_transform: simple_shapes/test_transform
+  - transforms@pre_transform: simple_shapes/pre_transform
+  - _self_
+
+base_exp_dir: "./exp/modelnet10"
+exp_dir: "exp"
+log_dir: "logs"
+config_dir: "config"
+checkpoint_dir: "checkpoint"
+
+params:
+  seed: 300
+  precision: 32
+  max_epochs: 25
+  train_batch_size: 32
+  test_batch_size: 128
+
+model_trainer:
+  _target_: training.trainers.cls_model.ClsTrainer
+  _recursive_: false
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  amp_backend: "native"
+  auto_select_gpus: true
+  benchmark: true
+  check_val_every_n_epoch: 2
+  deterministic: false
+  fast_dev_run: true
+  accelerator: 'gpu'
+  devices: 1
+  precision: ${params.precision}
+  max_epochs: ${params.max_epochs}
+  inference_mode: true
+  log_every_n_steps: 10
+  callbacks:
+    - _target_: pytorch_lightning.callbacks.ModelCheckpoint
+      dirpath: ${base_exp_dir}/${exp_dir}/${checkpoint_dir}
+      filename: '{epoch}-test-acc-{Test/Accuracy:.2f}'
+      monitor: "Test/Accuracy"
+      auto_insert_metric_name: false
+      every_n_epochs: ${...check_val_every_n_epoch}
+      save_last: true
+      mode: "max"
+    - _target_: pytorch_lightning.callbacks.EarlyStopping
+      monitor: ${...callbacks[0].monitor}
+      min_delta: 0.1
+      mode: ${...callbacks[0].mode}
+      strict: true
+
+  logger:
+    _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
+    save_dir: ${base_exp_dir}/${exp_dir}/${log_dir}
+
+
+datasets:
+  train_load_sett:
+    transform: ${train_transform}
+    pre_transform: ${pre_transform}
+    num_workers: 2
+    batch_size: ${params.train_batch_size}
+  test_load_sett:
+    transform: ${test_transform}
+    pre_transform: ${pre_transform}
+    num_workers: 2
+    batch_size: ${params.test_batch_size}

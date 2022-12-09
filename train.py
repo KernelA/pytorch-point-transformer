@@ -1,29 +1,47 @@
+import pathlib
+import json
+
 import hydra
-from hydra.core.config_store import ConfigStore
-from torch_geometric import transforms
-import data
-
-from data_configs import TrainConfig, DataConfig
-from data import SimpleShapesDataset
-
-cs = ConfigStore().instance()
-cs.store(name="train", node=TrainConfig)
-cs.store(name="data", node=DataConfig)
+from omegaconf import OmegaConf
+from pytorch_lightning import seed_everything, LightningDataModule, LightningModule, Trainer
 
 
-def get_train_transform(num_points: int):
-    return transforms.Compose([
-        transforms.SamplePoints(num=num_points),
-        transforms.NormalizeScale()]
-    )
+@ hydra.main(config_path="configs", version_base="1.2")
+def main(config):
+    seed_everything(config.params.seed)
+    datamodule: LightningDataModule = hydra.utils.instantiate(config.datasets)
+    datamodule.setup("fit")
+    datamodule.setup("validate")
 
+    class_mapping = datamodule.get_class_mapping()
 
-@ hydra.main(config_name="train")
-def main(config: TrainConfig):
-    pre_transform = get_train_transform(config.data.num_points)
+    config.model.num_classes = len(class_mapping)
 
-    SimpleShapesDataset(config.data.data_root, config.train_batch_size, config.test_batch_size,
-                        train_pre_transform=pre_transform, test_pre_transform=pre_transform)
+    model_trainer: LightningModule = hydra.utils.instantiate(
+        config.model_trainer,
+        model=hydra.utils.instantiate(config.model),
+        optimizer_config=config.optimizer,
+        scheduler_config=config.scheduler,
+        cls_mapping=class_mapping)
+
+    exp_dir = pathlib.Path(config.base_exp_dir) / config.exp_dir
+    exp_dir.mkdir(exist_ok=True, parents=True)
+
+    config_dir = exp_dir / config.config_dir
+    config_dir.mkdir(exist_ok=True)
+    OmegaConf.save(config=config, f=config_dir / "config.yaml", resolve=True)
+
+    with open(config_dir / "class_mapping.json", "w", encoding="utf-8") as f:
+        json.dump(class_mapping, f)
+
+    checkpoint_dir = exp_dir / config.checkpoint_dir
+    checkpoint_dir.mkdir(exist_ok=True, parents=True)
+
+    log_dir = exp_dir / config.log_dir
+    log_dir.mkdir(exist_ok=True, parents=True)
+
+    trainer: Trainer = hydra.utils.instantiate(config.trainer)
+    trainer.fit(model_trainer, datamodule=datamodule)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,16 @@
+tqdm~=4.61
+tensorboard~=2.5
+matplotlib~=3.5
+dvc~=2.33.0
+hydra-core~=1.2.0
+tzlocal
+colorlog~=5.0
+trimesh~=3.9.0
+gdown~=3.13.0
+torchmetrics~=0.10.2
+pytorch-lightning~=1.8.0
+ipywidgets>=7.0,<8.0 
+kaleido
+plotly==5.11.0
+downloader-cli~=0.3.3
+umap-learn~=0.5.3

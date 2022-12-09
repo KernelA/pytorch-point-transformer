@@ -1,5 +1,5 @@
-from torch import nn
 import torch
+from torch import nn
 from torch.nn import functional as F
 from torch_geometric.nn import MessagePassing, knn_graph
 
@@ -8,6 +8,8 @@ from ..types import PointSetBatchInfo
 
 
 class PointTransformerLayer(MessagePassing):
+    propagate_type = {"x": torch.Tensor, "pos": torch.Tensor}
+
     def __init__(self, *,
                  in_features: int,
                  out_features: int,
@@ -26,17 +28,20 @@ class PointTransformerLayer(MessagePassing):
                                    nn.Linear(gamma_mlp_hidden_dim, out_features)
                                    )
         self.knn_num_neighs = num_neighbors
+        self._out_features = out_features
 
-    def forward(self, input: PointSetBatchInfo) -> PointSetBatchInfo:
+    def forward(self, fpb_data: PointSetBatchInfo) -> PointSetBatchInfo:
         """features [N x in_features] - node features
            positions [N x num_coords] - position of points. By default num_coords is equal to 3.
-           batch - batch indices
+           batch [N x 1] - batch indices
         """
-        features, positions, batch = input
-        edge_indices = knn_graph(features, k=self.knn_num_neighs, batch=batch)
-        return self.propagate(edge_indices, x=features, pos=positions), positions, batch
+        features, positions, batch = fpb_data
+        edge_indices = knn_graph(features, k=self.knn_num_neighs,
+                                 batch=batch, flow=self.flow, loop=False)
+        new_features = self.propagate(edge_indices, x=features, pos=positions, size=None)
+        return new_features, positions, batch
 
-    def message(self, x_i, x_j, pos_i, pos_j):
+    def message(self, x_i: torch.Tensor, x_j: torch.Tensor, pos_i: torch.Tensor, pos_j: torch.Tensor) -> torch.Tensor:
         pos_encoding = self.positional_encoder(pos_i, pos_j)
         return F.softmax(self.gamma(self.phi(x_i) - self.psi(x_j) + pos_encoding),
                          dim=-1) * (self.alpha(x_j) + pos_encoding)

@@ -1,0 +1,4 @@
+_target_: point_transformer.models.cls_network.ClsPointTransformer
+in_features: 6
+num_transformer_blocks: 2
+num_classes: '???'
