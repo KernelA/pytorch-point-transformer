@@ -1,16 +1,17 @@
 import pathlib
 import json
 from typing import Tuple, Any
-import os
-import shutil
 
+import umap
+from plotly import graph_objects as go
 import torch
 import trimesh
 from torch_geometric.data import Data
 from omegaconf import OmegaConf
 from hydra.utils import instantiate
 from tqdm.auto import tqdm
-from torch.utils.tensorboard import SummaryWriter
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
 
 
 from point_transformer.models import ClsPointTransformer
@@ -60,10 +61,7 @@ def load_val_dataloader(config, batch_size: int = 18):
     return data_module.val_dataloader()
 
 
-def compute_embeddings(log_dir: str, model: ClsPointTransformer, val_dataloader, inv_mapping: dict, device):
-    if os.path.isdir(log_dir):
-        shutil.rmtree(log_dir)
-
+def compute_embeddings(model: ClsPointTransformer, val_dataloader, inv_mapping: dict, device):
     all_embeddings = []
     labels = []
 
@@ -75,12 +73,22 @@ def compute_embeddings(log_dir: str, model: ClsPointTransformer, val_dataloader,
                 labels.extend(map(lambda x: inv_mapping[x.item()],
                                   model.predict_class_data(batch).cpu()))
 
-    with SummaryWriter(log_dir=log_dir) as writer:
-        writer.add_embedding(
-            torch.concat(all_embeddings),
-            global_step=0,
-            tag="Simple shapes embeddings",
-            metadata=labels)
+    return torch.concat(all_embeddings).numpy(), labels
+
+
+def plot_embeddings(embeddings, labels):
+    encoder = LabelEncoder()
+    num_labels = encoder.fit_transform(labels)
+    new_embeddings = umap.UMAP().fit_transform(embeddings)
+
+    fig = go.Figure()
+
+    for num in np.unique(num_labels):
+        mask = num_labels == num
+        points = new_embeddings[mask]
+        fig.add_scatter(x=points[:, 0], y=points[:, 1], mode="markers", name=encoder.inverse_transform([num])[0])
+
+    return fig
 
 
 @torch.inference_mode()

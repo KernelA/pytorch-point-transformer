@@ -5,7 +5,7 @@ import pathlib
 import logging
 
 import torch
-from torch_geometric import data
+from torch_geometric import loader
 from tqdm.auto import tqdm
 import trimesh
 from trimesh.exchange.off import load_off
@@ -199,11 +199,11 @@ class ModelNetDataset(LightningDataModule):
         raise RuntimeError("You need setup dataset first")
 
     def train_dataloader(self):
-        return data.DataLoader(self.train_dataset, batch_size=self.train_load_sett.batch_size,
+        return loader.DataLoader(self.train_dataset, batch_size=self.train_load_sett.batch_size,
                                shuffle=True, drop_last=True, pin_memory=True,
                                num_workers=self.train_load_sett.num_workers)
 
     def val_dataloader(self):
-        return data.DataLoader(self.val_dataset, batch_size=self.test_load_sett.batch_size,
+        return loader.DataLoader(self.val_dataset, batch_size=self.test_load_sett.batch_size,
                                shuffle=False, drop_last=False, pin_memory=True,
                                num_workers=self.test_load_sett.num_workers)
