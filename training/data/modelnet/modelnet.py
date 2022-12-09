@@ -6,11 +6,16 @@ import logging
 
 import torch
 from torch_geometric import data
-from torch_geometric.io.off import parse_off
-import tqdm
+from tqdm.auto import tqdm
+import trimesh
+from trimesh.exchange.off import load_off
+from pytorch_lightning import LightningDataModule
+
+from .modelnet_info import MODELNET_CLASSES, ModelNetType
+from ..dataloader_settings import LoadSettings
+
 
 import log_set
-from ..mesh_data import BatchedData
 
 
 class ModelNet(data.Dataset):
@@ -25,7 +30,7 @@ class ModelNet(data.Dataset):
                  pre_transform=None,
                  pre_filter=None):
         assert split_type in self.SPLIT_TYPES
-        self.logger = logging.getLogger("pt.data")
+        self.logger = logging.getLogger()
         self.split_type = split_type
         self.class_names = class_names
 
@@ -36,15 +41,17 @@ class ModelNet(data.Dataset):
             self._processed_file_names = list(
                 f"mesh_{self.split_type}_{i}.pt" for i in range(len(zip_names)))
 
-        self._raw_file_name = [os.path.basename(self._path_to_zip)]
-
         super().__init__(root=data_root,
                          transform=transform,
-                         pre_transform=pre_transform, pre_filter=pre_filter)
+                         pre_transform=pre_transform,
+                         pre_filter=pre_filter)
 
     @property
     def raw_file_names(self) -> List[str]:
-        return self._raw_file_name
+        return []
+
+    def download(self):
+        pass
 
     @property
     def processed_file_names(self):
@@ -76,38 +83,32 @@ class ModelNet(data.Dataset):
         num_samples = 0
 
         with zipfile.ZipFile(self._path_to_zip, "r") as zip_archive:
-            zip_files = self._get_zip_names(zip_archive)
+            zip_file_names = self._get_zip_names(zip_archive)
 
-            for zip_file, processed_file in tqdm.tqdm(zip(zip_files, self.processed_paths), total=len(zip_files), desc="Process files"):
+            for zip_file, processed_file in tqdm(
+                    zip(zip_file_names, tuple(self.processed_paths)),
+                    total=len(zip_file_names),
+                    desc="Process files"):
+
                 full_path = pathlib.Path(zip_file.filename)
 
-                try:
-                    mesh_data = parse_off(zip_archive.read(
-                        zip_file).decode("utf-8").splitlines()[:-1])
-                except UnicodeDecodeError:
-                    self.logger.exception("Error when parse %s. Skip it", zip_file.filename)
-                    continue
+                with zip_archive.open(zip_file, "r") as zip_file:
+                    loaded_data = trimesh.Trimesh(**load_off(zip_file))
 
-                new_mesh_data = BatchedData()
+                class_name = full_path.parent.parent.name
 
-                for key in mesh_data.keys:
-                    setattr(new_mesh_data, key, mesh_data[key])
-                del mesh_data
-
-                new_mesh_data.y = class_mapping[full_path.parent.parent.name]
-                new_mesh_data.name = full_path.name
+                new_mesh_data = data.Data(pos=torch.from_numpy(loaded_data.vertices), face=torch.from_numpy(
+                    loaded_data.faces.T), y=class_mapping[class_name])
 
                 try:
                     if self.pre_transform is not None:
-                        transformed = self.pre_transform(new_mesh_data)
-                    else:
-                        transformed = new_mesh_data
+                        new_mesh_data = self.pre_transform(new_mesh_data)
 
                     if self.pre_filter is not None:
-                        if not self.pre_filter(transformed):
+                        if not self.pre_filter(new_mesh_data):
                             raise RuntimeError("Filter condition")
 
-                    torch.save(transformed, processed_file)
+                    torch.save(new_mesh_data, processed_file)
                     num_samples += 1
                 except RuntimeError:
                     self._processed_file_names.remove(os.path.basename(processed_file))
@@ -119,7 +120,7 @@ class ModelNet(data.Dataset):
     def len(self):
         return len(self.processed_file_names)
 
-    def get(self, idx: int) -> BatchedData:
+    def get(self, idx: int):
         return torch.load(self.processed_paths[idx])
 
 
@@ -131,13 +132,10 @@ class ModelNet40(ModelNet):
                  transform=None,
                  pre_transform=None,
                  pre_filter=None):
-        class_names = ["airplane", "bathtub", "bed", "bench", "bookshelf", "bottle", "bowl", "car",
-                       "chair", "cone", "cup", "curtain",
-                       "desk", "door", "dresser", "flower_pot", "glass_box", "guitar", "keyboard",
-                       "lamp", "laptop", "mantel", "monitor", "night_stand", "person", "piano", "plant",
-                       "radio", "range_hood", "sink", "sofa", "stairs", "stool", "table", "tent", "toilet",
-                       "tv_stand", "vase", "wardrobe", "xbox"]
-        super().__init__(path_to_zip, data_root, split_type, class_names,
+        super().__init__(path_to_zip,
+                         data_root,
+                         split_type,
+                         MODELNET_CLASSES[ModelNetType.modelnet_40],
                          transform=transform, pre_transform=pre_transform, pre_filter=pre_filter)
 
     def process(self):
@@ -152,119 +150,57 @@ class ModelNet10(ModelNet):
                  transform=None,
                  pre_transform=None,
                  pre_filter=None):
-        class_names = ["bathtub", "bed", "chair", "desk", "dresser",
-                       "monitor", "night_stand", "sofa", "table", "toilet"]
-        super().__init__(path_to_zip, data_root, split_type, class_names,
+        super().__init__(path_to_zip, data_root, split_type, MODELNET_CLASSES[ModelNetType.modelnet_10],
                          transform=transform, pre_transform=pre_transform, pre_filter=pre_filter)
 
     def process(self):
         return super().process()
 
 
-class ModelNetDataset:
+class ModelNetDataset(LightningDataModule):
     def __init__(self,
                  *,
                  data_root: str,
                  path_to_zip: str,
-                 name: str,
-                 train_num_workers: int,
-                 test_num_workers: int,
-                 train_batch_size: int,
-                 test_batch_size: int,
-                 train_transform=None,
-                 test_transform=None,
-                 train_pre_filter=None,
-                 test_pre_filter=None,
-                 train_pre_transform=None,
-                 test_pre_transform=None,):
-        assert name in ("40", "10")
+                 dataset_type: ModelNetType,
+                 train_load_sett: LoadSettings,
+                 test_load_sett: LoadSettings):
+        self.train_dataset = None
+        self.val_dataset = None
+        self.dataset_type = dataset_type
+        self.train_load_sett = train_load_sett
+        self.test_load_sett = test_load_sett
+        self._path_to_zip = path_to_zip
+        self._data_root = data_root
 
-        class_name = ModelNet40 if name == "40" else ModelNet10
+    def setup(self, stage):
+        cls = ModelNet10 if self.dataset_type == ModelNetType.modelnet_10 else ModelNet40
 
-        self.train_dataset = class_name(
-            data_root=data_root, path_to_zip=path_to_zip,
-            split_type="train",
-            transform=train_transform,
-            pre_filter=train_pre_filter,
-            pre_transform=train_pre_transform)
-
-        self.test_dataset = class_name(
-            data_root=data_root, path_to_zip=path_to_zip,
-            split_type="test",
-            pre_filter=test_pre_filter,
-            pre_transform=test_pre_transform,
-            transform=test_transform)
-
-        self.train_batch_size = train_batch_size
-        self.test_batch_size = test_batch_size
-        self.train_num_workers = train_num_workers
-        self.test_num_workers = test_num_workers
+        if stage == "fit":
+            self.train_dataset = cls(path_to_zip=self._path_to_zip, data_root=self._data_root,
+                                     split_type="train",
+                                     transform=self.train_load_sett.transform,
+                                     pre_transform=self.train_load_sett.pre_transform,
+                                     pre_filter=self.train_load_sett.pre_filter)
+        elif stage == "validate":
+            self.val_dataset = cls(path_to_zip=self._path_to_zip, data_root=self._data_root, split_type="test",
+                                   transform=self.train_load_sett.transform,
+                                   pre_transform=self.train_load_sett.pre_transform,
+                                   pre_filter=self.train_load_sett.pre_filter)
 
     def get_class_mapping(self):
-        return self.train_dataset.get_class_mapping()
+        if self.train_dataset is not None:
+            return self.train_dataset.class_mapping()
+        if self.val_dataset is not None:
+            return self.val_dataset.class_mapping()
+        raise RuntimeError("You need setup dataset first")
 
     def get_train_loader(self):
-        return data.DataLoader(self.train_dataset, batch_size=self.train_batch_size,
+        return data.DataLoader(self.train_dataset, batch_size=self.train_load_sett.batch_size,
                                shuffle=True, drop_last=True, pin_memory=True,
-                               num_workers=self.train_num_workers)
+                               num_workers=self.train_load_sett.num_workers)
 
     def get_test_loader(self):
-        return data.DataLoader(self.test_dataset, batch_size=self.test_batch_size,
+        return data.DataLoader(self.val_dataset, batch_size=self.test_load_sett.batch_size,
                                shuffle=False, drop_last=False, pin_memory=True,
-                               num_workers=self.test_num_workers)
-
-
-class ModelNet40Dataset(ModelNetDataset):
-    def __init__(self, *, data_root: str,
-                 path_to_zip: str,
-                 train_num_workers: int,
-                 test_num_workers: int,
-                 train_batch_size: int,
-                 test_batch_size: int,
-                 train_transform=None,
-                 test_transform=None,
-                 train_pre_filter=None,
-                 test_pre_filter=None,
-                 train_pre_transform=None,
-                 test_pre_transform=None):
-        super().__init__(data_root=data_root,
-                         name="40",
-                         path_to_zip=path_to_zip,
-                         train_num_workers=train_num_workers,
-                         test_num_workers=test_num_workers,
-                         train_batch_size=train_batch_size,
-                         test_batch_size=test_batch_size,
-                         train_transform=train_transform,
-                         test_transform=test_transform,
-                         train_pre_filter=train_pre_filter,
-                         test_pre_filter=test_pre_filter,
-                         train_pre_transform=train_pre_transform,
-                         test_pre_transform=test_pre_transform)
-
-
-class ModelNet10Dataset(ModelNetDataset):
-    def __init__(self, *, data_root: str,
-                 path_to_zip: str,
-                 train_num_workers: int,
-                 test_num_workers: int,
-                 train_batch_size: int,
-                 test_batch_size: int,
-                 train_transform=None,
-                 test_transform=None,
-                 train_pre_filter=None,
-                 test_pre_filter=None,
-                 train_pre_transform=None,
-                 test_pre_transform=None):
-        super().__init__(data_root=data_root,
-                         name="10",
-                         path_to_zip=path_to_zip,
-                         train_num_workers=train_num_workers,
-                         test_num_workers=test_num_workers,
-                         train_batch_size=train_batch_size,
-                         test_batch_size=test_batch_size,
-                         train_transform=train_transform,
-                         test_transform=test_transform,
-                         train_pre_filter=train_pre_filter,
-                         test_pre_filter=test_pre_filter,
-                         train_pre_transform=train_pre_transform,
-                         test_pre_transform=test_pre_transform)
+                               num_workers=self.test_load_sett.num_workers)

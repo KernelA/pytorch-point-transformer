@@ -1,0 +1,92 @@
+schema: '2.0'
+stages:
+  download-simple-shapes:
+    cmd: python ./gdownloader.py --url https://drive.google.com/file/d/1TJK0bm_HtGP-c-_l3Z-H-oQt5q0FudLw/view?usp=share_link
+      --out ./datasets/raw/modelnet10.zip
+    deps:
+    - path: ./gdownloader.py
+      md5: 1ba606b1d975c78d8694b491ced43688
+      size: 456
+    outs:
+    - path: ./datasets/raw/modelnet10.zip
+      md5: 7890527d3195af1400fb31f7d97f5a5e
+      size: 71089
+  download-dataset:
+    cmd: python ./gdownloader.py --out ./datasets/raw/modelnet10.zip --url https://drive.google.com/drive/u/0/folders/10WXMlWmx-ekcl6kSQNju6KvgBrQ3x1oI
+    deps:
+    - path: ./gdownloader.py
+      md5: 1ba606b1d975c78d8694b491ced43688
+      size: 456
+    outs:
+    - path: ./datasets/raw/modelnet10.zip
+      md5: ca360dca72fadee23e24e0dac87d3728
+      size: 957968
+  prepare-modelnet10:
+    cmd: python ./prepare_data.py -cn train_modelnet10
+    deps:
+    - path: ./configs/datasets/modelnet10.yaml
+      md5: 8a0c14ac2d6213cf425a3c23446d0c41
+      size: 508
+    - path: ./configs/prepare_dataset.yaml
+      md5: a3062335adb739db6ffc0a8414f4c051
+      size: 310
+    - path: ./configs/transforms/simple_shapes
+      md5: 73a48cb8adc25ad20914f8e98bd4b199.dir
+      size: 898
+      nfiles: 3
+    - path: ./datasets/raw/modelnet10.zip
+      md5: 4f6ca2505bf1b83a14c0688159f70ccd
+      size: 375188230
+    - path: ./prepare_data.py
+      md5: 2ee218c9ae61d69b61a91433ac3345fe
+      size: 311
+    - path: ./training/data/modelnet
+      md5: 2573de51c22a6a3119ffab0baf9ba1ca.dir
+      size: 30307
+      nfiles: 13
+    outs:
+    - path: ./datasets/modelnet10
+      md5: 7e36fdb17a5ad5ab1422f3ac5592c156.dir
+      size: 17876722
+      nfiles: 910
+  prepare-dataset:
+    cmd: python ./prepare_data.py -cn train_modelnet10
+    deps:
+    - path: ./configs/datasets/modelnet10.yaml
+      md5: 8a0c14ac2d6213cf425a3c23446d0c41
+      size: 508
+    - path: ./configs/prepare_dataset.yaml
+      md5: a3062335adb739db6ffc0a8414f4c051
+      size: 310
+    - path: ./configs/transforms/simple_shapes
+      md5: 73a48cb8adc25ad20914f8e98bd4b199.dir
+      size: 898
+      nfiles: 3
+    - path: ./datasets/raw/modelnet10.zip
+      md5: 4f6ca2505bf1b83a14c0688159f70ccd
+      size: 375188230
+    - path: ./prepare_data.py
+      md5: ec18bd1bb31f4c59e72a20db9b41ca30
+      size: 313
+    - path: ./training/data/modelnet
+      md5: 3ceb7ff34376cce03d2af197933d3bf6.dir
+      size: 30798
+      nfiles: 13
+    outs:
+    - path: ./datasets/modelnet10
+      md5: c2f1b795e856f287626392c0531a9aad.dir
+      size: 96447539
+      nfiles: 4901
+  prepare-config:
+    cmd: python ./resolve_config.py -cn train_modelnet10
+    deps:
+    - path: ./configs/train_modelnet10.yaml
+      md5: 982d5abb450522ed4b2135e319291c54
+      size: 2029
+    - path: ./resolve_config.py
+      md5: 6169ae480892976a0060dbed5149cf31
+      size: 328
+    outs:
+    - path: ./exp/modelnet10/config.yaml
+      md5: c53d83f28274ddcb6b878947f2acc177
+      size: 4464

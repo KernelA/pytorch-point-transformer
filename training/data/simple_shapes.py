@@ -7,7 +7,7 @@ import logging
 import torch
 from torch_geometric import loader, data
 from torch_geometric.data import Data
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import trimesh
 from trimesh.exchange import obj
 from pytorch_lightning import LightningDataModule
@@ -102,7 +102,7 @@ class SimpleShapesDataset(LightningDataModule):
         self.test_dataset = None
 
     def setup(self, stage: str) -> None:
-        if stage == "train":
+        if stage == "fit":
             self.train_dataset = SimpleShapesInMemory(
                 data_root=self.data_root,
                 path_to_zip=self.path_to_zip,
@@ -125,6 +125,7 @@ class SimpleShapesDataset(LightningDataModule):
             return self.train_dataset.class_mapping()
         if self.test_dataset is not None:
             return self.test_dataset.class_mapping()
+        raise RuntimeError("You need setup dataset first")
 
     def train_dataloader(self):
         return loader.DataLoader(self.train_dataset,

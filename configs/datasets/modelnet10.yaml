@@ -1,1 +1,18 @@
-_target_: data.modelnet.ModelNet10Dataset
+_target_: training.data.modelnet.modelnet.ModelNetDataset
+data_root: ./datasets/modelnet10
+path_to_zip: ./datasets/raw/modelnet10.zip
+dataset_type: 10
+train_load_sett: 
+  _target_: training.data.dataloader_settings.LoadSettings
+  num_workers: 2
+  batch_size: 64
+  pre_transform: null
+  pre_filter: null
+  transform: null
+test_load_sett:
+  _target_: training.data.dataloader_settings.LoadSettings
+  num_workers: 2
+  batch_size: 128
+  pre_transform: null
+  pre_filter: null
+  transform: null

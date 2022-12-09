@@ -13,3 +13,4 @@ ipywidgets>=7.0,<8.0
 pyrender~=0.1.45
 kaleido
 plotly==5.11.0
+downloader-cli~=0.3.3

@@ -12,7 +12,7 @@ stages:
       md5: 2d5e4e21ffe498e34588f9bfbae18d98
       size: 10365251
   prepare-simple-shapes:
-    cmd: python ./prepare_data.py datasets=simple_shapes
+    cmd: python ./prepare_data.py -cn train_simple_shapes
     deps:
     - path: ./configs/datasets/simple_shapes.yaml
       md5: 43cd33048a5551d92ba50c1798c77eee
@@ -28,14 +28,14 @@ stages:
       md5: 2d5e4e21ffe498e34588f9bfbae18d98
       size: 10365251
     - path: ./prepare_data.py
-      md5: ca741f9445362151467fafa202bd9980
-      size: 251
+      md5: 2ee218c9ae61d69b61a91433ac3345fe
+      size: 311
     - path: ./training/data/simple_shapes.py
-      md5: 79e0c77af1a94466623c87ee29ed7a6f
-      size: 5056
+      md5: 87d838f8c754a07e804f6b15f942c717
+      size: 5320
     outs:
     - path: ./datasets/simple_shapes
-      md5: 98a45613a61306a96d14699372054c61.dir
+      md5: 6f18211595f4e4f08145c20543d26207.dir
       size: 33240140
       nfiles: 4
   prepare-config-simple-shapes:

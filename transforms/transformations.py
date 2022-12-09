@@ -38,7 +38,6 @@ class SamplePoints(BaseTransform):
         self.include_normals = include_normals
 
     def __call__(self, data: Data) -> Data:
-        breakpoint()
         mesh = trimesh.Trimesh(vertices=data.pos.numpy(), face=data.face.numpy())
         samples, face_indices = sample.sample_surface(mesh, count=self.num_points)
 
