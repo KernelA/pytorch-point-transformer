@@ -6,6 +6,7 @@ import logging
 
 import torch
 from torch_geometric import loader
+from torch_geometric import data
 from tqdm.auto import tqdm
 import trimesh
 from trimesh.exchange.off import load_off

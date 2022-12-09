@@ -38,7 +38,7 @@ trainer:
   benchmark: true
   check_val_every_n_epoch: 2
   deterministic: false
-  fast_dev_run: true
+  fast_dev_run: false
   accelerator: 'gpu'
   devices: 1
   precision: ${params.precision}

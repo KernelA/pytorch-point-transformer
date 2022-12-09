@@ -12,6 +12,7 @@ from hydra.utils import instantiate
 from tqdm.auto import tqdm
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
+from matplotlib import pyplot as plt
 
 
 from point_transformer.models import ClsPointTransformer
@@ -81,12 +82,16 @@ def plot_embeddings(embeddings, labels):
     num_labels = encoder.fit_transform(labels)
     new_embeddings = umap.UMAP().fit_transform(embeddings)
 
-    fig = go.Figure()
+    fig = plt.Figure(figsize=(7, 7))
+    ax = fig.add_subplot(111)
 
     for num in np.unique(num_labels):
         mask = num_labels == num
         points = new_embeddings[mask]
-        fig.add_scatter(x=points[:, 0], y=points[:, 1], mode="markers", name=encoder.inverse_transform([num])[0])
+        ax.scatter(x=points[:, 0], y=points[:, 1],
+                   label=encoder.inverse_transform([num])[0])
+
+    ax.legend()
 
     return fig
 
