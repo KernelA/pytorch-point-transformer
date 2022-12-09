@@ -12,15 +12,11 @@ stages:
       md5: 7890527d3195af1400fb31f7d97f5a5e
       size: 71089
   download-dataset:
-    cmd: python ./gdownloader.py --out ./datasets/raw/modelnet10.zip --url https://drive.google.com/drive/u/0/folders/10WXMlWmx-ekcl6kSQNju6KvgBrQ3x1oI
-    deps:
-    - path: ./gdownloader.py
-      md5: 1ba606b1d975c78d8694b491ced43688
-      size: 456
+    cmd: dw http://vision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip ./datasets/raw/modelnet10.zip
     outs:
     - path: ./datasets/raw/modelnet10.zip
-      md5: ca360dca72fadee23e24e0dac87d3728
-      size: 957968
+      md5: 18f4c73879802c35aa6178f8e773a99e
+      size: 473402300
   prepare-modelnet10:
     cmd: python ./prepare_data.py -cn train_modelnet10
     deps:
@@ -63,18 +59,18 @@ stages:
       size: 898
       nfiles: 3
     - path: ./datasets/raw/modelnet10.zip
-      md5: 4f6ca2505bf1b83a14c0688159f70ccd
-      size: 375188230
+      md5: 18f4c73879802c35aa6178f8e773a99e
+      size: 473402300
     - path: ./prepare_data.py
       md5: ec18bd1bb31f4c59e72a20db9b41ca30
       size: 313
     - path: ./training/data/modelnet
-      md5: 3ceb7ff34376cce03d2af197933d3bf6.dir
-      size: 30798
+      md5: 0d8acd9c09d91773a2e063d775f23ff1.dir
+      size: 30951
       nfiles: 13
     outs:
     - path: ./datasets/modelnet10
-      md5: c2f1b795e856f287626392c0531a9aad.dir
+      md5: 087923595972b6369924cb48d92472b7.dir
       size: 96447539
       nfiles: 4901
   prepare-config:
@@ -90,3 +86,78 @@ stages:
     - path: ./exp/modelnet10/config.yaml
       md5: c53d83f28274ddcb6b878947f2acc177
       size: 4464
+  train:
+    cmd: python ./train.py -cn train_modelnet10
+    deps:
+    - path: ./datasets/modelnet10
+      md5: 087923595972b6369924cb48d92472b7.dir
+      size: 96447539
+      nfiles: 4901
+    - path: ./exp/modelnet10/config.yaml
+      md5: c53d83f28274ddcb6b878947f2acc177
+      size: 4464
+    - path: ./point_transformer
+      md5: ae5cf233e79bebc8a452445ae80598a5.dir
+      size: 35928
+      nfiles: 32
+    - path: ./train.py
+      md5: f6df83b8b9a1377abeaf95cc03d9e8d2
+      size: 1581
+    - path: ./training/metrics
+      md5: c698c8f22d3eab27ebfec2ee55d45d29.dir
+      size: 2221
+      nfiles: 4
+    - path: ./training/trainers
+      md5: d9805bab8b426825fb911b8fe831404d.dir
+      size: 9561
+      nfiles: 5
+    params:
+      exp/modelnet10/config.yaml:
+        model:
+          _target_: point_transformer.models.cls_network.ClsPointTransformer
+          in_features: 6
+          num_transformer_blocks: 3
+          num_classes: ???
+        optimizer:
+          _target_: torch.optim.Adam
+          lr: 0.0001
+          betas:
+          - 0.9
+          - 0.999
+          amsgrad: true
+          weight_decay: 0.0001
+        params:
+          seed: 300
+          precision: 32
+          max_epochs: 10
+          train_batch_size: 32
+          test_batch_size: 128
+        scheduler:
+          _target_: torch.optim.lr_scheduler.MultiStepLR
+          milestones:
+          - 120
+          - 160
+          gamma: 0.1
+        test_transform:
+          _target_: torch_geometric.transforms.Compose
+          transforms:
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 0
+            degrees: 180
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 2
+            degrees: 180
+        train_transform:
+          _target_: torch_geometric.transforms.Compose
+          transforms:
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 0
+            degrees: 180
+          - _target_: torch_geometric.transforms.RandomRotate
+            axis: 2
+            degrees: 180
+    outs:
+    - path: ./exp/modelnet10/exp
+      md5: 58db6f1e758c7b26c8031da5fb897da7.dir
+      size: 4592
+      nfiles: 2

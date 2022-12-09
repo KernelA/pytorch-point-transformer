@@ -165,6 +165,7 @@ class ModelNetDataset(LightningDataModule):
                  dataset_type: ModelNetType,
                  train_load_sett: LoadSettings,
                  test_load_sett: LoadSettings):
+        super().__init__()
         self.train_dataset = None
         self.val_dataset = None
         self.dataset_type = dataset_type
@@ -176,31 +177,33 @@ class ModelNetDataset(LightningDataModule):
     def setup(self, stage):
         cls = ModelNet10 if self.dataset_type == ModelNetType.modelnet_10 else ModelNet40
 
-        if stage == "fit":
+        if stage == "fit" or stage is None:
             self.train_dataset = cls(path_to_zip=self._path_to_zip, data_root=self._data_root,
                                      split_type="train",
                                      transform=self.train_load_sett.transform,
                                      pre_transform=self.train_load_sett.pre_transform,
                                      pre_filter=self.train_load_sett.pre_filter)
-        elif stage == "validate":
-            self.val_dataset = cls(path_to_zip=self._path_to_zip, data_root=self._data_root, split_type="test",
+
+        if stage == "validate" or stage is None:
+            self.val_dataset = cls(path_to_zip=self._path_to_zip, data_root=self._data_root,
+                                   split_type="test",
                                    transform=self.train_load_sett.transform,
                                    pre_transform=self.train_load_sett.pre_transform,
                                    pre_filter=self.train_load_sett.pre_filter)
 
     def get_class_mapping(self):
         if self.train_dataset is not None:
-            return self.train_dataset.class_mapping()
+            return self.train_dataset.get_class_mapping()
         if self.val_dataset is not None:
-            return self.val_dataset.class_mapping()
+            return self.val_dataset.get_class_mapping()
         raise RuntimeError("You need setup dataset first")
 
-    def get_train_loader(self):
+    def train_dataloader(self):
         return data.DataLoader(self.train_dataset, batch_size=self.train_load_sett.batch_size,
                                shuffle=True, drop_last=True, pin_memory=True,
                                num_workers=self.train_load_sett.num_workers)
 
-    def get_test_loader(self):
+    def val_dataloader(self):
         return data.DataLoader(self.val_dataset, batch_size=self.test_load_sett.batch_size,
                                shuffle=False, drop_last=False, pin_memory=True,
                                num_workers=self.test_load_sett.num_workers)

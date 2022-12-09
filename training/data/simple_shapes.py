@@ -102,7 +102,7 @@ class SimpleShapesDataset(LightningDataModule):
         self.test_dataset = None
 
     def setup(self, stage: str) -> None:
-        if stage == "fit":
+        if stage == "fit" or stage is None:
             self.train_dataset = SimpleShapesInMemory(
                 data_root=self.data_root,
                 path_to_zip=self.path_to_zip,
@@ -111,7 +111,7 @@ class SimpleShapesDataset(LightningDataModule):
                 pre_filter=self.train_load_set.pre_filter,
                 pre_transform=self.train_load_set.pre_transform)
 
-        if stage == "validate":
+        if stage == "validate" or stage is None:
             self.test_dataset = SimpleShapesInMemory(
                 path_to_zip=self.path_to_zip,
                 data_root=self.data_root,

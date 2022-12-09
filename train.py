@@ -11,6 +11,7 @@ def main(config):
     seed_everything(config.params.seed)
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datasets)
     datamodule.setup("fit")
+    datamodule.setup("validate")
 
     class_mapping = datamodule.get_class_mapping()
 

@@ -37,6 +37,7 @@ trainer:
   auto_select_gpus: true
   benchmark: true
   check_val_every_n_epoch: 2
+  val_check_interval: 1.0
   deterministic: false
   fast_dev_run: false
   accelerator: 'gpu'

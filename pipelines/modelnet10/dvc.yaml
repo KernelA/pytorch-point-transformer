@@ -8,7 +8,8 @@ stages:
     wdir: ../..
     cmd: dw http://vision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip ${path_to_zip}
     outs:
-      - ${path_to_zip}
+      - ${path_to_zip}:
+          persist: true
 
   prepare-dataset:
     wdir: ../..
