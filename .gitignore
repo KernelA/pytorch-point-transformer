@@ -143,3 +143,4 @@ datasets/
 exp/
 !configs/datasets
 demo_data/
+wandb/

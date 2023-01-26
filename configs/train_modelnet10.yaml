@@ -39,7 +39,7 @@ trainer:
   check_val_every_n_epoch: 5
   deterministic: false
   fast_dev_run: false
-  accelerator: 'tpu'
+  accelerator: 'gpu'
   devices: 1
   precision: ${params.precision}
   max_epochs: ${params.max_epochs}
@@ -64,8 +64,10 @@ trainer:
     #   strict: true
 
   logger:
-    _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
-    save_dir: ${base_exp_dir}/${exp_dir}/${log_dir}
+    # _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
+    # save_dir: ${base_exp_dir}/${exp_dir}/${log_dir}
+    _target_: pytorch_lightning.loggers.wandb.WandbLogger
+    project: 'pytorch-point-transformer'
 
 
 datasets:
