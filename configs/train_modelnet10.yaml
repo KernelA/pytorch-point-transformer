@@ -23,7 +23,7 @@ checkpoint_dir: "checkpoint"
 params:
   seed: 300
   precision: 16
-  max_epochs: 50
+  max_epochs: 200
   train_batch_size: 32
   test_batch_size: 128
 
@@ -36,7 +36,7 @@ trainer:
   amp_backend: "native"
   auto_select_gpus: true
   benchmark: true
-  check_val_every_n_epoch: 2
+  check_val_every_n_epoch: 5
   deterministic: false
   fast_dev_run: false
   accelerator: 'gpu'
