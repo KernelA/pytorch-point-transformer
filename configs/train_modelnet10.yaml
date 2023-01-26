@@ -54,11 +54,14 @@ trainer:
       every_n_epochs: ${...check_val_every_n_epoch}
       save_last: true
       mode: "max"
-    - _target_: pytorch_lightning.callbacks.EarlyStopping
-      monitor: ${...callbacks[0].monitor}
-      min_delta: 0.01
-      mode: ${...callbacks[0].mode}
-      strict: true
+    - _target_: pytorch_lightning.callbacks.LearningRateMonitor
+      logging_interval: "epoch"
+      log_momentum: false
+    # - _target_: pytorch_lightning.callbacks.EarlyStopping
+    #   monitor: ${...callbacks[0].monitor}
+    #   min_delta: 0.01
+    #   mode: ${...callbacks[0].mode}
+    #   strict: true
 
   logger:
     _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
