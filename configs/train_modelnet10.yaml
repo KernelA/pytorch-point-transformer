@@ -39,7 +39,7 @@ trainer:
   check_val_every_n_epoch: 5
   deterministic: false
   fast_dev_run: false
-  accelerator: 'gpu'
+  accelerator: 'tpu'
   devices: 1
   precision: ${params.precision}
   max_epochs: ${params.max_epochs}
