@@ -22,7 +22,7 @@ checkpoint_dir: "checkpoint"
 
 params:
   seed: 300
-  precision: 32
+  precision: 16
   max_epochs: 10
   train_batch_size: 32
   test_batch_size: 128
@@ -57,7 +57,7 @@ trainer:
       mode: "max"
     - _target_: pytorch_lightning.callbacks.EarlyStopping
       monitor: ${...callbacks[0].monitor}
-      min_delta: 0.1
+      min_delta: 0.05
       mode: ${...callbacks[0].mode}
       strict: true
 

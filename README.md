@@ -6,12 +6,13 @@
 
 ### Presentation
 
-[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KernelA/pytorch-point-transformer/blob/made/presentation.ipynb)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KernelA/pytorch-point-transformer/blob/made-2022/presentation.ipynb)
 
 ### Colab training
 
-[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KernelA/pytorch-point-transformer/blob/made/colab_training.ipynb)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KernelA/pytorch-point-transformer/blob/made-2022/colab_training.ipynb)
 
+[More info](https://github.com/phygitalism/3DML-Habr-paper)
 
 ## Requirements
 
