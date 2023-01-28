@@ -36,6 +36,7 @@ class ClsTrainer(LightningModule):
             self.cls_mapping.items(), key=lambda x: x[1]))
         self._test_stage = "Test"
         self._train_stage = "Train"
+        self._is_log_incorrect = False
 
     def configure_optimizers(self):
         optimizer = instantiate(self._optimizer_config, self.model.parameters())
@@ -107,10 +108,11 @@ class ClsTrainer(LightningModule):
 
         incorrect_example_index = torch.nonzero(predicted_labels != batch.y).view(-1)
 
-        if len(incorrect_example_index) > 0:
+        if len(incorrect_example_index) > 0 and not self._is_log_incorrect:
             incorrect_example_index = incorrect_example_index[0].item()
             incorrect_example = batch[incorrect_example_index]
             self._log_point_cloud(incorrect_example, batch_idx)
+            self._is_log_incorrect = True
 
     def validation_epoch_end(self, outputs) -> None:
         matrix = self._conf_matrix.compute().cpu().numpy()
@@ -130,4 +132,5 @@ class ClsTrainer(LightningModule):
             self.logger.log_image(key=log_name, images=[
                                   Image.open(buffer)], caption=["Confusion matrix"])
 
+        self._is_log_incorrect = False
         self._conf_matrix.reset()

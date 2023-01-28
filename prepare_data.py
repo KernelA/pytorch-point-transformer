@@ -1,4 +1,5 @@
 import hydra
+import log_set
 
 
 @ hydra.main(config_path="configs", config_name="prepare_dataset", version_base="1.2")

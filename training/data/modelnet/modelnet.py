@@ -3,20 +3,41 @@ import os
 import zipfile
 import pathlib
 import logging
+import shutil
 
 import torch
 from torch_geometric import loader
 from torch_geometric import data
-from tqdm.auto import tqdm
 import trimesh
-from trimesh.exchange.off import load_off
+from joblib import Parallel, delayed
 from pytorch_lightning import LightningDataModule
 
 from .modelnet_info import MODELNET_CLASSES, ModelNetType
 from ..dataloader_settings import LoadSettings
 
 
-import log_set
+def _process_data(path: str, out_path: str, pre_transform, pre_filter, class_mapping: dict):
+    loaded_data = trimesh.load(path)
+    class_name = pathlib.Path(path).parent.parent.name
+
+    new_mesh_data = data.Data(
+        pos=torch.from_numpy(loaded_data.vertices),
+        face=torch.from_numpy(loaded_data.faces.T),
+        y=class_mapping[class_name])
+
+    try:
+        if pre_transform is not None:
+            new_mesh_data = pre_transform(new_mesh_data)
+
+        if pre_filter is not None:
+            if not pre_filter(new_mesh_data):
+                raise RuntimeError("Filter condition")
+
+        torch.save(new_mesh_data, out_path)
+    except RuntimeError:
+        return os.path.basename(out_path)
+
+    return None
 
 
 class ModelNet(data.Dataset):
@@ -29,13 +50,15 @@ class ModelNet(data.Dataset):
                  class_names: List[str],
                  transform=None,
                  pre_transform=None,
-                 pre_filter=None):
+                 pre_filter=None,
+                 n_jobs: int = 4):
         assert split_type in self.SPLIT_TYPES
         self.logger = logging.getLogger()
         self.split_type = split_type
         self.class_names = class_names
 
         self._path_to_zip = path_to_zip
+        self.n_jobs = n_jobs
 
         with zipfile.ZipFile(self._path_to_zip, "r") as archive:
             zip_names = self._get_zip_names(archive)
@@ -61,7 +84,7 @@ class ModelNet(data.Dataset):
     def get_class_mapping(self) -> Dict[str, int]:
         return {class_name: i for i, class_name in enumerate(self.class_names)}
 
-    def _get_zip_names(self, zip_archive) -> List[zipfile.ZipInfo]:
+    def _get_zip_names(self, zip_archive) -> List[str]:
         zip_files = zip_archive.infolist()
         filtered_zip_files = []
 
@@ -72,51 +95,44 @@ class ModelNet(data.Dataset):
             full_path = pathlib.Path(zip_file.filename)
 
             if full_path.parent.name == self.split_type and full_path.suffix == ".off":
-                filtered_zip_files.append(zip_file)
+                filtered_zip_files.append(zip_file.filename)
 
         return filtered_zip_files
 
     def process(self):
-        class_mapping = self.get_class_mapping()
-
         self.logger.info("Open %s", self._path_to_zip)
-
-        num_samples = 0
 
         with zipfile.ZipFile(self._path_to_zip, "r") as zip_archive:
             zip_file_names = self._get_zip_names(zip_archive)
+            zip_archive.extractall(self.raw_dir, zip_file_names)
 
-            for zip_file, processed_file in tqdm(
-                    zip(zip_file_names, tuple(self.processed_paths)),
-                    total=len(zip_file_names),
-                    desc="Process files"):
+        try:
+            paths = [os.path.join(self.raw_dir, path) for path in zip_file_names]
 
-                full_path = pathlib.Path(zip_file.filename)
+            deleted_paths: list = Parallel(n_jobs=self.n_jobs, prefer="processes", verbose=1)(
+                delayed(_process_data)(
+                    src_path,
+                    out_path,
+                    self.pre_transform,
+                    self.pre_filter,
+                    self.get_class_mapping()
+                ) for src_path, out_path in zip(paths, self.processed_paths)
+            )
+        finally:
+            shutil.rmtree(self.raw_dir)
 
-                with zip_archive.open(zip_file, "r") as zip_file:
-                    loaded_data = trimesh.Trimesh(**load_off(zip_file))
+        num_unprocessed = 0
 
-                class_name = full_path.parent.parent.name
+        for del_path in deleted_paths:
+            if del_path is None:
+                continue
+            num_unprocessed += 1
+            self._processed_file_names.remove(del_path)
 
-                new_mesh_data = data.Data(pos=torch.from_numpy(loaded_data.vertices), face=torch.from_numpy(
-                    loaded_data.faces.T), y=class_mapping[class_name])
-
-                try:
-                    if self.pre_transform is not None:
-                        new_mesh_data = self.pre_transform(new_mesh_data)
-
-                    if self.pre_filter is not None:
-                        if not self.pre_filter(new_mesh_data):
-                            raise RuntimeError("Filter condition")
-
-                    torch.save(new_mesh_data, processed_file)
-                    num_samples += 1
-                except RuntimeError:
-                    self._processed_file_names.remove(os.path.basename(processed_file))
-                    self.logger.exception(
-                        "Unexpected error in pre_transform or transforms. Remove %s from data", zip_file)
-
-        self.logger.info("Processed %d", num_samples)
+        if num_unprocessed > 0:
+            self.logger.exception(
+                "Unexpected error in pre_transform or transforms. Remove %d files from data", num_unprocessed)
+        self.logger.info("Processed %d", len(zip_file_names) - num_unprocessed)
 
     def len(self):
         return len(self.processed_file_names)
@@ -201,10 +217,10 @@ class ModelNetDataset(LightningDataModule):
 
     def train_dataloader(self):
         return loader.DataLoader(self.train_dataset, batch_size=self.train_load_sett.batch_size,
-                               shuffle=True, drop_last=True, pin_memory=True,
-                               num_workers=self.train_load_sett.num_workers)
+                                 shuffle=True, drop_last=True, pin_memory=True,
+                                 num_workers=self.train_load_sett.num_workers)
 
     def val_dataloader(self):
         return loader.DataLoader(self.val_dataset, batch_size=self.test_load_sett.batch_size,
-                               shuffle=False, drop_last=False, pin_memory=True,
-                               num_workers=self.test_load_sett.num_workers)
+                                 shuffle=False, drop_last=False, pin_memory=True,
+                                 num_workers=self.test_load_sett.num_workers)

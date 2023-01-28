@@ -15,3 +15,4 @@ plotly==5.11.0
 downloader-cli~=0.3.3
 umap-learn~=0.5.3
 wandb~=0.13.9
+joblib~=1.2.0
