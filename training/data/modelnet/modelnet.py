@@ -51,7 +51,7 @@ class ModelNet(data.Dataset):
                  transform=None,
                  pre_transform=None,
                  pre_filter=None,
-                 n_jobs: int = 4):
+                 n_jobs: int = -1):
         assert split_type in self.SPLIT_TYPES
         self.logger = logging.getLogger()
         self.split_type = split_type
