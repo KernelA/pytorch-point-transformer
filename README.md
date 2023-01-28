@@ -36,12 +36,12 @@ pip install -r ./requirements.cpu.txt -r ./requirements.base.txt
 ### Train on the simple shapes dataset
 
 ```
-!dvc repro -s -f pipelines/simple_shapes/dvc.yaml:train
+dvc repro -s -f pipelines/simple_shapes/dvc.yaml:train
 ```
 
 
 ### Train on the ModelNet10 dataset
 
 ```
-!dvc repro -s -f pipelines/modelnet10/dvc.yaml:train
+dvc repro -s -f pipelines/modelnet10/dvc.yaml:train
 ```

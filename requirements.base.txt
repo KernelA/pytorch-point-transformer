@@ -1,7 +1,7 @@
 tqdm~=4.61
 tensorboard~=2.5
 matplotlib~=3.5
-dvc~=2.33.0
+dvc~=2.43.0
 hydra-core~=1.2.0
 tzlocal
 colorlog~=5.0
@@ -14,3 +14,5 @@ kaleido
 plotly==5.11.0
 downloader-cli~=0.3.3
 umap-learn~=0.5.3
+wandb~=0.13.9
+joblib~=1.2.0

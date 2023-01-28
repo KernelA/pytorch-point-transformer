@@ -5,7 +5,7 @@ hydra:
 
 
 defaults:
-  - datasets: modelnet10
+  - datasets: modelnet40
   - optimizer: adam
   - model: cls_model
   - scheduler: multistep
@@ -14,7 +14,7 @@ defaults:
   - transforms@pre_transform: simple_shapes/pre_transform
   - _self_
 
-base_exp_dir: "./exp/modelnet10"
+base_exp_dir: "./exp/modelnet40"
 exp_dir: "exp"
 log_dir: "logs"
 config_dir: "config"
