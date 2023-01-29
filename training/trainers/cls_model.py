@@ -119,8 +119,10 @@ class ClsTrainer(LightningModule):
 
         conf_plot = ConfusionMatrixDisplay(matrix, display_labels=self._class_labels)
         conf_plot.plot()
+
+        conf_plot.display_labels
         fig = conf_plot.figure_
-        fig.set_size_inches(10, 10)
+        fig.set_size_inches(30, 30)
 
         log_name = f"{self._test_stage}/Conf_matrix"
 
@@ -131,6 +133,13 @@ class ClsTrainer(LightningModule):
             fig.savefig(buffer, bbox_inches="tight")
             self.logger.log_image(key=log_name, images=[
                                   Image.open(buffer)], caption=["Confusion matrix"])
+
+            col_labels = conf_plot.figure_.get_axes().get_xticklabels()
+            row_labels = conf_plot.figure_.get_axes().get_yticklabels()
+
+            rows = [[label] + list(row) for row, label in zip(matrix, row_labels)]
+            conf_table = wandb.Table(data=rows, columns=col_labels)
+            self.logger.log_table({log_name: conf_table})
 
         self._is_log_incorrect = False
         self._conf_matrix.reset()
