@@ -11,7 +11,7 @@ defaults:
   - scheduler: multistep
   - transforms@train_transform: simple_shapes/train_transform
   - transforms@test_transform: simple_shapes/test_transform
-  - transforms@pre_transform: simple_shapes/pre_transform
+  - transforms@pre_transform: modelnet/pre_transform
   - _self_
 
 base_exp_dir: "./exp/modelnet40"
