@@ -6,7 +6,9 @@ vars:
 stages:
   download-dataset:
     wdir: ../..
-    cmd: dw http://modelnet.cs.princeton.edu/ModelNet40.zip ${file_loc}
+    cmd: python ./downloader.py --url http://modelnet.cs.princeton.edu/ModelNet40.zip --out ${file_loc}
+    deps:
+      - ./downloader.py
     outs:
       - ${file_loc}:
           persist: true

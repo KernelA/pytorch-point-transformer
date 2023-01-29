@@ -6,7 +6,9 @@ vars:
 stages:
   download-dataset:
     wdir: ../..
-    cmd: dw http://vision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip ${file_loc}
+    cmd: python ./downloader.py --url http://vision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip --out ${file_loc}
+    deps:
+      - ./downloader.py
     outs:
       - ${file_loc}:
           persist: true
