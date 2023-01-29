@@ -8,7 +8,7 @@ def main(args):
     if os.path.exists(args.out) and not args.force:
         return
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    Download(args.url).download()
+    Download(args.url, des=args.out).download()
 
 
 if __name__ == "__main__":

@@ -12,7 +12,12 @@ stages:
       md5: 7890527d3195af1400fb31f7d97f5a5e
       size: 71089
   download-dataset:
-    cmd: dw http://vision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip ./datasets/raw/modelnet10.zip
+    cmd: python ./downloader.py --url http://vision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip
+      --out ./datasets/raw/modelnet10.zip
+    deps:
+    - path: ./downloader.py
+      md5: c9ce0adc80a7f5f953a6d569308f782f
+      size: 651
     outs:
     - path: ./datasets/raw/modelnet10.zip
       md5: 18f4c73879802c35aa6178f8e773a99e
@@ -49,8 +54,8 @@ stages:
     cmd: python ./prepare_data.py -cn train_modelnet10
     deps:
     - path: ./configs/datasets/modelnet10.yaml
-      md5: 8a0c14ac2d6213cf425a3c23446d0c41
-      size: 508
+      md5: 8685941c1a026383213575156a57def6
+      size: 523
     - path: ./configs/prepare_dataset.yaml
       md5: a3062335adb739db6ffc0a8414f4c051
       size: 310
@@ -62,61 +67,61 @@ stages:
       md5: 18f4c73879802c35aa6178f8e773a99e
       size: 473402300
     - path: ./prepare_data.py
-      md5: ec18bd1bb31f4c59e72a20db9b41ca30
-      size: 313
+      md5: 4607881479bcff75f1ae9e22f247c596
+      size: 329
     - path: ./training/data/modelnet
-      md5: 0d8acd9c09d91773a2e063d775f23ff1.dir
-      size: 30951
+      md5: eecbc41cb6caab27bf904d360e8e6e0b.dir
+      size: 33895
       nfiles: 13
     outs:
     - path: ./datasets/modelnet10
-      md5: 087923595972b6369924cb48d92472b7.dir
-      size: 96447539
+      md5: beeb27ffabb2ac21c0340c102893caf3.dir
+      size: 186745907
       nfiles: 4901
   prepare-config:
-    cmd: python ./resolve_config.py -cn train_modelnet10
+    cmd: python ./resolve_config.py -cn train_modelnet10 model.num_transformer_blocks=5
     deps:
     - path: ./configs/train_modelnet10.yaml
-      md5: 982d5abb450522ed4b2135e319291c54
-      size: 2029
+      md5: a710d1c8bb4904539fe8056f0fce404a
+      size: 2267
     - path: ./resolve_config.py
-      md5: 6169ae480892976a0060dbed5149cf31
-      size: 328
+      md5: 55c8b471528728bfef1ba78363dd1811
+      size: 344
     outs:
     - path: ./exp/modelnet10/config.yaml
-      md5: c53d83f28274ddcb6b878947f2acc177
-      size: 4464
+      md5: 22c1a448d8a53f1a994dd9660580f303
+      size: 4453
   train:
     cmd: python ./train.py -cn train_modelnet10
     deps:
     - path: ./datasets/modelnet10
-      md5: 087923595972b6369924cb48d92472b7.dir
-      size: 96447539
+      md5: beeb27ffabb2ac21c0340c102893caf3.dir
+      size: 186745907
       nfiles: 4901
     - path: ./exp/modelnet10/config.yaml
-      md5: c53d83f28274ddcb6b878947f2acc177
-      size: 4464
+      md5: 95293b0bce32c2a0eaafe26e4ebb6409
+      size: 4452
     - path: ./point_transformer
-      md5: ae5cf233e79bebc8a452445ae80598a5.dir
+      md5: 502810c7ac28232b0399e8ec5395bf4f.dir
       size: 35928
       nfiles: 32
     - path: ./train.py
-      md5: f6df83b8b9a1377abeaf95cc03d9e8d2
-      size: 1581
+      md5: 8344131d6876e11f12118a4fe1a47523
+      size: 1597
     - path: ./training/metrics
-      md5: c698c8f22d3eab27ebfec2ee55d45d29.dir
+      md5: 6eb4963b1f6492193ad909a37a42fdb0.dir
       size: 2221
       nfiles: 4
     - path: ./training/trainers
-      md5: d9805bab8b426825fb911b8fe831404d.dir
-      size: 9561
+      md5: 92ad386bfcbf245ed316c574eaac5b80.dir
+      size: 12258
       nfiles: 5
     params:
       exp/modelnet10/config.yaml:
         model:
           _target_: point_transformer.models.cls_network.ClsPointTransformer
           in_features: 6
-          num_transformer_blocks: 3
+          num_transformer_blocks: 5
           num_classes: ???
         optimizer:
           _target_: torch.optim.Adam
@@ -128,8 +133,8 @@ stages:
           weight_decay: 0.0001
         params:
           seed: 300
-          precision: 32
-          max_epochs: 10
+          precision: 16
+          max_epochs: 200
           train_batch_size: 32
           test_batch_size: 128
         scheduler:
@@ -158,6 +163,6 @@ stages:
             degrees: 180
     outs:
     - path: ./exp/modelnet10/exp
-      md5: 58db6f1e758c7b26c8031da5fb897da7.dir
-      size: 4592
+      md5: 803ce47394e615ecca000496fff7036b.dir
+      size: 4580
       nfiles: 2
