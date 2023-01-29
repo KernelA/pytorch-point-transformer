@@ -1,22 +1,22 @@
 vars:
-  - ../../configs/datasets/modelnet40.yaml:path_to_zip,data_root
+  - ../../configs/datasets/modelnet40.yaml:file_loc,data_root
   - config_name: train_modelnet40
   - ../../configs/train_modelnet40.yaml:base_exp_dir,exp_dir
 
 stages:
   download-dataset:
     wdir: ../..
-    cmd: dw http://modelnet.cs.princeton.edu/ModelNet40.zip ${path_to_zip}
+    cmd: dw http://modelnet.cs.princeton.edu/ModelNet40.zip ${file_loc}
     outs:
-      - ${path_to_zip}:
+      - ${file_loc}:
           persist: true
 
   prepare-dataset:
     wdir: ../..
-    cmd: python ./prepare_data.py -cn train_modelnet40
+    cmd: python ./prepare_data.py -cn ${config_name}
     deps:
       - ./configs/datasets/modelnet40.yaml
-      - ${path_to_zip}
+      - ${file_loc}
       - ./configs/prepare_dataset.yaml
       - ./configs/transforms/simple_shapes
       - ./prepare_data.py

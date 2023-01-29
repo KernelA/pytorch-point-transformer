@@ -1,6 +1,8 @@
 _target_: training.data.modelnet.modelnet.ModelNetDataset
 data_root: ./datasets/modelnet10
-path_to_zip: ./datasets/raw/modelnet10.zip
+file_loc: ./datasets/raw/modelnet10.zip
+protocol: zip://
+n_jobs: 4
 dataset_type: 10
 train_load_sett: 
   _target_: training.data.dataloader_settings.LoadSettings
