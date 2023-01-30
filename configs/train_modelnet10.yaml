@@ -6,7 +6,7 @@ hydra:
 
 defaults:
   - datasets: modelnet10
-  - optimizer: adam
+  - optimizer: sgd
   - model: cls_model
   - scheduler: multistep
   - transforms@train_transform: simple_shapes/train_transform
