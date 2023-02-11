@@ -67,6 +67,7 @@ trainer:
     # _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
     # save_dir: ${base_exp_dir}/${exp_dir}/${log_dir}
     _target_: pytorch_lightning.loggers.wandb.WandbLogger
+    prefix: 'modelnet-10-'
     project: 'pytorch-point-transformer'
 
 

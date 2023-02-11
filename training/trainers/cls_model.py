@@ -115,7 +115,7 @@ class ClsTrainer(LightningModule):
             self._is_log_incorrect = True
 
     def validation_epoch_end(self, outputs) -> None:
-        matrix = self._conf_matrix.compute().cpu().numpy()
+        matrix = self._conf_matrix.compute().round(decimals=2).cpu().numpy()
 
         conf_plot = ConfusionMatrixDisplay(matrix, display_labels=self._class_labels)
         conf_plot.plot()
