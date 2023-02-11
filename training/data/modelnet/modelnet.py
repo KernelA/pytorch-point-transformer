@@ -42,6 +42,15 @@ def _process_data(path: str, out_path: str, pre_transform, pre_filter, class_map
     return None
 
 
+def remove_refix(string: str, prefix: str):
+    """For Colab Python 3.7
+    """
+    if string.startswith(prefix):
+        return string[len(prefix):]
+
+    return string
+
+
 class ModelNet(data.Dataset):
     SPLIT_TYPES = ("train", "test")
 
@@ -68,7 +77,7 @@ class ModelNet(data.Dataset):
         self._file_url = file_url
         self.n_jobs = n_jobs
         self._processed_file_names = [os.path.join(
-            self.split_type, str(pathlib.Path(abs_path.removeprefix("/")).with_suffix(".pt"))) for abs_path in self._raw_fs_paths]
+            self.split_type, str(pathlib.Path(remove_refix(abs_path, "/")).with_suffix(".pt"))) for abs_path in self._raw_fs_paths]
 
         super().__init__(root=data_root,
                          transform=transform,
