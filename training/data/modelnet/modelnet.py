@@ -119,7 +119,7 @@ class ModelNet(data.Dataset):
 
         with fs.open_fs(self._file_url, writeable=False) as filesystem:
             for file_path in tqdm(self._raw_fs_paths, desc="Copy files"):
-                out_file = os.path.join(self.raw_dir, file_path.removeprefix("/"))
+                out_file = os.path.join(self.raw_dir, remove_refix(file_path, "/"))
 
                 os.makedirs(os.path.dirname(out_file), exist_ok=True)
 
