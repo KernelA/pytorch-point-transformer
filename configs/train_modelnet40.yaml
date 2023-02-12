@@ -24,9 +24,6 @@ checkpoint_dir: "checkpoint"
 model:
   num_transformer_blocks: 4 
   
-logger:
-  prefix: 'modelnet-40-'
-
 params:
   seed: 300
   precision: 16

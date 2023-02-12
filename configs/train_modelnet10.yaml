@@ -35,9 +35,6 @@ model_trainer:
 model:
   num_transformer_blocks: 4 
   
-logger:
-  prefix: 'modelnet-10-'
-
 trainer:
   _target_: pytorch_lightning.Trainer
   amp_backend: "native"
