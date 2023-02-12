@@ -127,12 +127,8 @@ stages:
       size: 153534811
       nfiles: 6
   download:
-    cmd: python ./gdownloader.py --url https://drive.google.com/uc?id=1xM5diKjMbp_PfNu--JG2A-ZeFk9TLkks
-      --out ./datasets/raw/simple-shapes-dataset-v2.zip
-    deps:
-    - path: ./gdownloader.py
-      md5: 1ba606b1d975c78d8694b491ced43688
-      size: 456
+    cmd: gdown https://drive.google.com/uc?id=1xM5diKjMbp_PfNu--JG2A-ZeFk9TLkks -O
+      ./datasets/raw/simple-shapes-dataset-v2.zip
     outs:
     - path: ./datasets/raw/simple-shapes-dataset-v2.zip
       md5: 2d5e4e21ffe498e34588f9bfbae18d98
@@ -154,60 +150,60 @@ stages:
       md5: 2d5e4e21ffe498e34588f9bfbae18d98
       size: 10365251
     - path: ./prepare_data.py
-      md5: ec18bd1bb31f4c59e72a20db9b41ca30
-      size: 313
+      md5: 4607881479bcff75f1ae9e22f247c596
+      size: 329
     - path: ./training/data/simple_shapes.py
       md5: 933493e62733324cf4742193df3ee95f
       size: 5417
     outs:
     - path: ./datasets/simple_shapes
-      md5: 9fb11057af6ef0c367b2c874ec2d1efa.dir
+      md5: d51a9130423920e08c2552b7c1e8967c.dir
       size: 33240140
       nfiles: 4
   prepare-config:
     cmd: python ./resolve_config.py -cn train_simple_shapes
     deps:
     - path: ./configs/train_simple_shapes.yaml
-      md5: 049a46a21398ebf086161b69de241b08
-      size: 2063
+      md5: d89ceba49b9caae997ced7c05e188770
+      size: 1975
     - path: ./resolve_config.py
-      md5: 6169ae480892976a0060dbed5149cf31
-      size: 328
+      md5: 55c8b471528728bfef1ba78363dd1811
+      size: 344
     outs:
     - path: ./exp/simple_shapes/config.yaml
-      md5: 5788c320f993a6e4059fa5e661ce188f
-      size: 4498
+      md5: 49f3836a7ac7b289890dc96721d8bd62
+      size: 4619
   train:
     cmd: python ./train.py -cn train_simple_shapes
     deps:
     - path: ./datasets/simple_shapes
-      md5: 9fb11057af6ef0c367b2c874ec2d1efa.dir
+      md5: d51a9130423920e08c2552b7c1e8967c.dir
       size: 33240140
       nfiles: 4
     - path: ./exp/simple_shapes/config.yaml
-      md5: 5788c320f993a6e4059fa5e661ce188f
-      size: 4498
+      md5: 49f3836a7ac7b289890dc96721d8bd62
+      size: 4619
     - path: ./point_transformer
-      md5: ae5cf233e79bebc8a452445ae80598a5.dir
-      size: 35928
+      md5: ab448ab3c823c8c9b6c4f7ce9584057f.dir
+      size: 36154
       nfiles: 32
     - path: ./train.py
-      md5: f6df83b8b9a1377abeaf95cc03d9e8d2
-      size: 1581
+      md5: 8344131d6876e11f12118a4fe1a47523
+      size: 1597
     - path: ./training/metrics
-      md5: c698c8f22d3eab27ebfec2ee55d45d29.dir
+      md5: 6eb4963b1f6492193ad909a37a42fdb0.dir
       size: 2221
       nfiles: 4
     - path: ./training/trainers
-      md5: d9805bab8b426825fb911b8fe831404d.dir
-      size: 9561
+      md5: df7045f7eb3f1b46e93c81ff27cf7f3e.dir
+      size: 12733
       nfiles: 5
     params:
       exp/simple_shapes/config.yaml:
         model:
           _target_: point_transformer.models.cls_network.ClsPointTransformer
           in_features: 6
-          num_transformer_blocks: 3
+          num_transformer_blocks: 4
           num_classes: ???
         optimizer:
           _target_: torch.optim.Adam
@@ -219,7 +215,7 @@ stages:
           weight_decay: 0.0001
         params:
           seed: 300
-          precision: 32
+          precision: 16
           max_epochs: 10
           train_batch_size: 32
           test_batch_size: 128
@@ -249,6 +245,6 @@ stages:
             degrees: 180
     outs:
     - path: ./exp/simple_shapes/exp
-      md5: 1859ec775c5aec3fae44d157edd609a4.dir
-      size: 153575679
-      nfiles: 6
+      md5: 983ded92c763b998caa5dbfe638a0c3d.dir
+      size: 4694
+      nfiles: 2

@@ -12,6 +12,7 @@ defaults:
   - transforms@train_transform: simple_shapes/train_transform
   - transforms@test_transform: simple_shapes/test_transform
   - transforms@pre_transform: simple_shapes/pre_transform
+  - logger: tensorboard
   - _self_
 
 base_exp_dir: "./exp/simple_shapes"
@@ -40,7 +41,7 @@ trainer:
   val_check_interval: 1.0
   deterministic: false
   fast_dev_run: false
-  accelerator: 'gpu'
+  accelerator: 'cpu'
   devices: 1
   precision: ${params.precision}
   max_epochs: ${params.max_epochs}
@@ -61,11 +62,7 @@ trainer:
       mode: ${...callbacks[0].mode}
       strict: true
 
-  logger:
-    # _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
-    # save_dir: ${base_exp_dir}/${exp_dir}/${log_dir}
-    _target_: pytorch_lightning.loggers.wandb.WandbLogger
-    project: 'pytorch-point-transformer'
+  logger: ${logger}
 
 
 datasets:

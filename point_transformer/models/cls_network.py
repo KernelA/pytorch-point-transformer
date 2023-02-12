@@ -24,6 +24,7 @@ class ClsPointTransformer(nn.Module):
                  num_classes: int,
                  num_neighs: int = 16,
                  num_transformer_blocks: int = 1,
+                 compress_dim_ratio_from_input: float = 1.0,
                  is_jit: bool = False):
         super().__init__()
         out_features = 32
@@ -47,7 +48,8 @@ class ClsPointTransformer(nn.Module):
                                 num_neighbors=num_neighs,
                                 fps_sample_ratio=0.25),
                  PointTransformerBlock(in_out_features=classification_dim,
-                                       compress_dim=out_features * i,
+                                       compress_dim=round(
+                                           compress_dim_ratio_from_input * out_features * i),
                                        num_neighbors=num_neighs,
                                        is_jit=is_jit)
                  ]
@@ -81,4 +83,4 @@ class ClsPointTransformer(nn.Module):
         return self.get_embedding((data.x, data.pos, data.batch))
 
     def predict_class(self, predicted_logits: torch.Tensor) -> torch.Tensor:
-        return predicted_logits.argmax(dim = -1)
+        return predicted_logits.argmax(dim=-1)
