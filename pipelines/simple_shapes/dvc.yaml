@@ -6,9 +6,7 @@ vars:
 stages:
   download:
     wdir: ../..
-    cmd: python ./gdownloader.py --url https://drive.google.com/uc?id=1xM5diKjMbp_PfNu--JG2A-ZeFk9TLkks --out ${path_to_zip}
-    deps:
-      - ./gdownloader.py
+    cmd: gdown https://drive.google.com/uc?id=1xM5diKjMbp_PfNu--JG2A-ZeFk9TLkks -O ${path_to_zip}
     outs:
       - ${path_to_zip}
 
@@ -27,7 +25,7 @@ stages:
 
   prepare-config:
     wdir: ../..
-    cmd: python ./resolve_config.py -cn ${config_name}
+    cmd: python ./resolve_config.py -cn ${config_name} model.num_transformer_blocks=4 logger.prefix='modelnet-10-'
     deps:
       - ./resolve_config.py
       - ./configs/${config_name}.yaml

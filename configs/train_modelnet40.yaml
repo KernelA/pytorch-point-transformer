@@ -9,6 +9,7 @@ defaults:
   - optimizer: sgd
   - model: cls_model
   - scheduler: multistep
+  - logger: wandb
   - transforms@train_transform: simple_shapes/train_transform
   - transforms@test_transform: simple_shapes/test_transform
   - transforms@pre_transform: modelnet/pre_transform
@@ -19,6 +20,12 @@ exp_dir: "exp"
 log_dir: "logs"
 config_dir: "config"
 checkpoint_dir: "checkpoint"
+
+model:
+  num_transformer_blocks: 4 
+  
+logger:
+  prefix: 'modelnet-40-'
 
 params:
   seed: 300
@@ -63,13 +70,7 @@ trainer:
     #   mode: ${...callbacks[0].mode}
     #   strict: true
 
-  logger:
-    # _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
-    # save_dir: ${base_exp_dir}/${exp_dir}/${log_dir}
-    _target_: pytorch_lightning.loggers.wandb.WandbLogger
-    prefix: 'modelnet-40-'
-    project: 'pytorch-point-transformer'
-
+  logger: ${logger}
 
 datasets:
   train_load_sett:

@@ -9,6 +9,7 @@ defaults:
   - optimizer: sgd
   - model: cls_model
   - scheduler: multistep
+  - logger: wandb
   - transforms@train_transform: simple_shapes/train_transform
   - transforms@test_transform: simple_shapes/test_transform
   - transforms@pre_transform: modelnet/pre_transform
@@ -30,6 +31,12 @@ params:
 model_trainer:
   _target_: training.trainers.cls_model.ClsTrainer
   _recursive_: false
+
+model:
+  num_transformer_blocks: 4 
+  
+logger:
+  prefix: 'modelnet-10-'
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -63,13 +70,7 @@ trainer:
     #   mode: ${...callbacks[0].mode}
     #   strict: true
 
-  logger:
-    # _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
-    # save_dir: ${base_exp_dir}/${exp_dir}/${log_dir}
-    _target_: pytorch_lightning.loggers.wandb.WandbLogger
-    prefix: 'modelnet-10-'
-    project: 'pytorch-point-transformer'
-
+  logger: ${logger}
 
 datasets:
   train_load_sett:
