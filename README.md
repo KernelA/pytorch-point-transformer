@@ -33,6 +33,11 @@ pip install -r ./requirements.torch.cpu.txt
 pip install -r ./requirements.cpu.txt -r ./requirements.base.txt
 ```
 
+Only for `presentation.ipynb`
+```
+pip install -r requirements.add.txt
+```
+
 ### Train on the simple shapes dataset
 
 ```
