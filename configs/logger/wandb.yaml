@@ -1,3 +1,2 @@
 _target_: pytorch_lightning.loggers.wandb.WandbLogger
-prefix: '${exp_prefix}-'
 project: 'pytorch-point-transformer'
