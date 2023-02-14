@@ -252,7 +252,7 @@ class ModelNetDataset(LightningDataModule):
 
     def train_dataloader(self):
         return loader.DataLoader(self.train_dataset, batch_size=self.train_load_sett.batch_size,
-                                 shuffle=True, drop_last=True, pin_memory=True,
+                                 shuffle=False, drop_last=True, pin_memory=True,
                                  num_workers=self.train_load_sett.num_workers)
 
     def val_dataloader(self):
