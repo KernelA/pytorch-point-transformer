@@ -38,7 +38,7 @@ class SamplePoints(BaseTransform):
         self.include_normals = include_normals
 
     def __call__(self, data: Data) -> Data:
-        mesh = trimesh.Trimesh(vertices=data.pos.numpy(), face=data.face.numpy())
+        mesh = trimesh.Trimesh(vertices=data.pos.numpy(), faces=data.face.numpy())
         samples, face_indices = sample.sample_surface(mesh, count=self.num_points)
 
         new_data = Data()
@@ -51,7 +51,7 @@ class SamplePoints(BaseTransform):
 
         if self.include_normals:
             new_data.normal = torch.from_numpy(mesh.face_normals[face_indices].astype(np.float32))
-            new_data.normal /= torch.linalg.norm(new_data.normal, dim=1)
+            new_data.normal /= torch.linalg.norm(new_data.normal, dim=1, keepdim=True)
 
         return new_data
 
