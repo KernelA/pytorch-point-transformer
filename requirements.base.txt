@@ -1,6 +1,6 @@
-tqdm~=4.61
-tensorboard~=2.5
-matplotlib~=3.5
+tqdm>=4.60,<4.70
+tensorboard~=2.5.0
+matplotlib~=3.5.0
 dvc~=2.43.0
 hydra-core~=1.2.0
 tzlocal
