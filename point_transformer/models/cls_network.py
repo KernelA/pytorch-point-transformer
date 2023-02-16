@@ -19,6 +19,20 @@ class TupleInputSeq(nn.Sequential):
         return input
 
 
+class InitMapping(nn.Module):
+    def __init__(self, in_features: int, out_features: int) -> None:
+        super().__init__()
+        self._mapping = nn.Sequential(
+            nn.Linear(in_features, out_features),
+            nn.BatchNorm1d(out_features),
+            nn.Linear(out_features, out_features, bias=False),
+        )
+
+    def forward(self, input_data: PointSetBatchInfo) -> PointSetBatchInfo:
+        features, positions, batch = input_data
+        return self._mapping(features), positions, batch
+
+
 class ClsPointTransformer(nn.Module):
     def __init__(self, in_features: int,
                  num_classes: int,
@@ -29,19 +43,15 @@ class ClsPointTransformer(nn.Module):
         super().__init__()
         out_features = 32
 
-        self.init_mapping = nn.Sequential(
-            nn.Linear(in_features, out_features),
-            nn.BatchNorm1d(out_features),
-            nn.Linear(out_features, out_features, bias=False)
-        )
-
-        transformer_blocks = [PointTransformerBlock(in_out_features=out_features,
-                                                    compress_dim=out_features // 2, num_neighbors=num_neighs, is_jit=is_jit)]
+        transformer_blocks = [
+            InitMapping(in_features, out_features),
+            PointTransformerBlock(in_out_features=out_features,
+                                  compress_dim=out_features // 2, num_neighbors=num_neighs, is_jit=is_jit)]
 
         classification_dim = 0
 
-        for i in range(1, num_transformer_blocks + 1):
-            classification_dim = 2 * i * out_features
+        for _ in range(1, num_transformer_blocks + 1):
+            classification_dim = 2 * out_features
             transformer_blocks.extend(
                 [TransitionDown(in_features=out_features,
                  out_features=classification_dim,
@@ -49,7 +59,7 @@ class ClsPointTransformer(nn.Module):
                                 fps_sample_ratio=0.25),
                  PointTransformerBlock(in_out_features=classification_dim,
                                        compress_dim=round(
-                                           compress_dim_ratio_from_input * out_features * i),
+                                           compress_dim_ratio_from_input * out_features),
                                        num_neighbors=num_neighs,
                                        is_jit=is_jit)
                  ]
@@ -66,8 +76,7 @@ class ClsPointTransformer(nn.Module):
     def get_embedding(self, fpb_data: PointSetBatchInfo):
         features, positions, batch = fpb_data
         assert positions.shape[1] == 3, "Expected 3D coordinates"
-        projected_features = self.init_mapping(features)
-        new_features, _, new_batch = self.feature_extractor((projected_features, positions, batch))
+        new_features, _, new_batch = self.feature_extractor((features, positions, batch))
         return global_mean_pool(new_features, new_batch)
 
     @torch.jit.unused

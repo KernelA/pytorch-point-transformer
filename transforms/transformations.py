@@ -51,6 +51,7 @@ class SamplePoints(BaseTransform):
 
         if self.include_normals:
             new_data.normal = torch.from_numpy(mesh.face_normals[face_indices].astype(np.float32))
+            new_data.normal /= torch.linalg.norm(new_data.normal, dim=1)
 
         return new_data
 

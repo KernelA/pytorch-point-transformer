@@ -5,7 +5,12 @@ import log_set
 import torch
 from tqdm.auto import tqdm
 
+from point_transformer.models import ClsPointTransformer
+
 if __name__ == "__main__":
+
+    cls = ClsPointTransformer(6, 10, num_transformer_blocks=4)
+
     config = OmegaConf.load("./exp/modelnet10/config.yaml")
 
     datamodule: LightningDataModule = instantiate(config.datasets)
