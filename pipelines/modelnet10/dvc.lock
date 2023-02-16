@@ -54,8 +54,8 @@ stages:
     cmd: python ./prepare_data.py -cn train_modelnet10
     deps:
     - path: ./configs/datasets/modelnet10.yaml
-      md5: 8685941c1a026383213575156a57def6
-      size: 523
+      md5: 55cffb7699539971709d1db882a1f2f1
+      size: 534
     - path: ./configs/prepare_dataset.yaml
       md5: a3062335adb739db6ffc0a8414f4c051
       size: 310
@@ -70,27 +70,27 @@ stages:
       md5: 4607881479bcff75f1ae9e22f247c596
       size: 329
     - path: ./training/data/modelnet
-      md5: 1bd6fd1bf083c92d189e00fbe8a7230e.dir
-      size: 34265
+      md5: a621c438b76eabb0d391719facac30b8.dir
+      size: 34262
       nfiles: 13
     outs:
     - path: ./datasets/modelnet10
-      md5: beeb27ffabb2ac21c0340c102893caf3.dir
+      md5: e37ba9ce90eb582201a8122fff2e2321.dir
       size: 186745907
       nfiles: 4901
   prepare-config:
     cmd: python ./resolve_config.py -cn train_modelnet10
     deps:
     - path: ./configs/train_modelnet10.yaml
-      md5: c3817f61721a0758b3f7cdfe8f8d6db2
-      size: 2143
+      md5: 950fe3f287b19b283847fb1669703485
+      size: 2106
     - path: ./resolve_config.py
       md5: 55c8b471528728bfef1ba78363dd1811
       size: 344
     outs:
     - path: ./exp/modelnet10/config.yaml
-      md5: 40144ae9006cf2bdbaa7c88e63176786
-      size: 4574
+      md5: 8cbd6d2ceb050655dd6f4430edf5b44d
+      size: 4524
   train:
     cmd: python ./train.py -cn train_modelnet10
     deps:

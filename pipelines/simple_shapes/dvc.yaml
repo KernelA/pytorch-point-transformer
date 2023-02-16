@@ -25,7 +25,7 @@ stages:
 
   prepare-config:
     wdir: ../..
-    cmd: python ./resolve_config.py -cn ${config_name} model.num_transformer_blocks=4 logger.prefix='modelnet-10-'
+    cmd: python ./resolve_config.py -cn ${config_name}
     deps:
       - ./resolve_config.py
       - ./configs/${config_name}.yaml

@@ -21,6 +21,9 @@ log_dir: "logs"
 config_dir: "config"
 checkpoint_dir: "checkpoint"
 
+model:
+  num_transformer_blocks: 3
+
 params:
   seed: 300
   precision: 16
@@ -41,7 +44,7 @@ trainer:
   val_check_interval: 1.0
   deterministic: false
   fast_dev_run: false
-  accelerator: 'cpu'
+  accelerator: 'gpu'
   devices: 1
   precision: ${params.precision}
   max_epochs: ${params.max_epochs}
