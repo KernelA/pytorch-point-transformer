@@ -20,7 +20,9 @@ stages:
       - ./configs/datasets/modelnet40.yaml
       - ${file_loc}
       - ./configs/prepare_dataset.yaml
+      - ./configs/${config_name}.yaml
       - ./configs/transforms/simple_shapes
+      - ./configs/transforms/modelnet
       - ./prepare_data.py
       - ./training/data/modelnet
     outs:
@@ -33,12 +35,18 @@ stages:
     deps:
       - ./resolve_config.py
       - ./configs/${config_name}.yaml
+      - ./configs/datasets/modelnet40.yaml
+      - ./configs/model/cls_model.yaml
+      - ./configs/optimizer/sgd.yaml
+      - ./configs/optimizer/adam.yaml
+      - ./configs/scheduler/multistep.yaml
+      - ./configs/transforms/modelnet
     outs:
       - ${base_exp_dir}/config.yaml
 
   train:
     wdir: ../..
-    cmd: python ./train.py -cn ${config_name}
+    cmd: python ./train.py -cn config -cp ${base_exp_dir}
     params:
       - ${base_exp_dir}/config.yaml:
         - params

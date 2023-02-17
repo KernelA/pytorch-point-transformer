@@ -174,7 +174,7 @@ stages:
       md5: 24cd0e0d90efd7c5266bd9b3dd255d15
       size: 4619
   train:
-    cmd: python ./train.py -cn train_simple_shapes
+    cmd: python ./train.py -cn config -cp ./exp/simple_shapes
     deps:
     - path: ./datasets/simple_shapes
       md5: d51a9130423920e08c2552b7c1e8967c.dir
@@ -184,7 +184,7 @@ stages:
       md5: 24cd0e0d90efd7c5266bd9b3dd255d15
       size: 4619
     - path: ./point_transformer
-      md5: 374e25db6100fe6bb6478cb5249ad75b.dir
+      md5: 8ffe2aeed9c712115e0c5ca26e2e67c9.dir
       size: 36920
       nfiles: 32
     - path: ./train.py
@@ -245,6 +245,6 @@ stages:
             degrees: 180
     outs:
     - path: ./exp/simple_shapes/exp
-      md5: a11c9dbb7db997620150cc61b100d281.dir
-      size: 7865510
+      md5: d4311bec4d68c7e2155d53b28dbd9de7.dir
+      size: 7747609
       nfiles: 6
