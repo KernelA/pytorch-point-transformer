@@ -13,3 +13,5 @@ downloader-cli~=0.3.3
 wandb~=0.13.9
 joblib~=1.2.0
 fs~=2.4.16
+protobuf<=3.20
+

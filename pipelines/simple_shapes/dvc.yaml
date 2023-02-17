@@ -29,12 +29,18 @@ stages:
     deps:
       - ./resolve_config.py
       - ./configs/${config_name}.yaml
+      - ./configs/datasets/simple_shapes.yaml
+      - ./configs/model/cls_model.yaml
+      - ./configs/optimizer/sgd.yaml
+      - ./configs/optimizer/adam.yaml
+      - ./configs/scheduler/multistep.yaml
+      - ./configs/transforms/simple_shapes
     outs:
       - ${base_exp_dir}/config.yaml
 
   train:
     wdir: ../..
-    cmd: python ./train.py -cn ${config_name}
+    cmd: python ./train.py -cn config -cp ${base_exp_dir}
     params:
       - ${base_exp_dir}/config.yaml:
         - params
