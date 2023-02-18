@@ -16,6 +16,7 @@ from pytorch_lightning import LightningDataModule
 
 from .modelnet_info import MODELNET_CLASSES, ModelNetType
 from ..dataloader_settings import LoadSettings
+from ...samplers import StratifiedBatchSampler
 
 
 def _process_data(path: str, out_path: str, pre_transform, pre_filter, class_mapping: dict, index: int):
@@ -76,6 +77,7 @@ class ModelNet(data.Dataset):
 
         self._file_url = file_url
         self.n_jobs = n_jobs
+        self._class_labels = []
         self._processed_file_names = [os.path.join(
             self.split_type, str(pathlib.Path(remove_refix(abs_path, "/")).with_suffix(".pt"))) for abs_path in self._raw_fs_paths]
 
@@ -84,9 +86,15 @@ class ModelNet(data.Dataset):
                          pre_transform=pre_transform,
                          pre_filter=pre_filter)
 
+        for path in self.processed_paths:
+            self._class_labels.append(torch.load(path).y)
+
     @property
     def raw_file_names(self) -> List[str]:
         return []
+
+    def class_labels(self) -> List[int]:
+        return self._class_labels
 
     def download(self):
         pass
@@ -113,7 +121,7 @@ class ModelNet(data.Dataset):
         return filtered_files
 
     def process(self):
-        self.logger.info("Open %s.", self._file_url)
+        self.logger.info("Open '%s'", self._file_url)
 
         temp_paths = []
 
@@ -131,7 +139,7 @@ class ModelNet(data.Dataset):
             for path in self.processed_paths:
                 os.makedirs(os.path.dirname(path), exist_ok=True)
 
-            delete_indices: list = Parallel(n_jobs=self.n_jobs, prefer="processes", verbose=1)(
+            delete_indices = Parallel(n_jobs=self.n_jobs, prefer="processes", verbose=1)(
                 delayed(_process_data)(
                     src_path,
                     out_path,
@@ -251,8 +259,13 @@ class ModelNetDataset(LightningDataModule):
         raise RuntimeError("You need setup dataset first")
 
     def train_dataloader(self):
-        return loader.DataLoader(self.train_dataset, batch_size=self.train_load_sett.batch_size,
-                                 shuffle=False, drop_last=True, pin_memory=True,
+        return loader.DataLoader(self.train_dataset,
+                                 pin_memory=True,
+                                 batch_sampler=StratifiedBatchSampler(
+                                     batch_size=self.train_load_sett.batch_size,
+                                     shuffle=True,
+                                     class_labels=self.train_dataset.class_labels()
+                                 ),
                                  num_workers=self.train_load_sett.num_workers)
 
     def val_dataloader(self):

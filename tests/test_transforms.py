@@ -16,5 +16,5 @@ def test_normal_tranfsorm():
 
     sampled_points = tr(data_sample)
 
-    torch.testing.assert_allclose(torch.linalg.norm(
+    torch.testing.assert_close(torch.linalg.norm(
         sampled_points.normal, dim=1), torch.full((sampled_points.normal.shape[0], ), 1.0))

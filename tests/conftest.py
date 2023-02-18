@@ -8,12 +8,23 @@ NUM_POINTS = 10
 SEED = 20
 
 
-@pytest.fixture(scope="session")
-def sample_batch():
+@pytest.fixture(scope="function")
+def generator():
     generator = torch.Generator()
     generator.manual_seed(SEED)
+    return generator
 
-    points = torch.randn((NUM_POINTS, NUM_COORDS), generator=generator)
+
+@pytest.fixture(scope="session")
+def session_generator():
+    generator = torch.Generator()
+    generator.manual_seed(SEED)
+    return generator
+
+
+@pytest.fixture(scope="session")
+def sample_batch(session_generator):
+    points = torch.randn((NUM_POINTS, NUM_COORDS), generator=session_generator)
     features = points.clone()
 
     pointcloud_sample = Data(x=features, pos=points)
