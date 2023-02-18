@@ -1,7 +1,8 @@
-from typing import Union, Dict, Optional
+from typing import Dict, Optional
 import io
 
 import torch
+from torch import nn
 from pytorch_lightning import LightningModule
 from torch_geometric.data import Batch, Data
 from hydra.utils import instantiate
@@ -29,14 +30,18 @@ class ClsTrainer(LightningModule):
         self.cls_mapping = cls_mapping
         self._scheduler_config = scheduler_config
         self._optimizer_config = optimizer_config
-        self._conf_matrix = ConfusionMatrix(len(self.cls_mapping), normalize="all")
-        self._accuracy = Accuracy(num_classes=len(self.cls_mapping))
-        self._mean_loss_per_epoch = AccMean()
+        num_classes = len(self.cls_mapping)
+        self._conf_matrix = ConfusionMatrix(num_classes, normalize="all")
+        self._accuracy = Accuracy(num_classes=num_classes)
+        self._train_accuracy = Accuracy(num_classes=num_classes)
+        self._mean_train_loss_per_epoch = AccMean()
+        self._mean_val_loss_per_epoch = AccMean()
         self._class_labels = tuple(name for name, _ in sorted(
             self.cls_mapping.items(), key=lambda x: x[1]))
         self._test_stage = "Test"
         self._train_stage = "Train"
         self._is_log_incorrect = False
+        self._loss_module = nn.CrossEntropyLoss(reduction="mean")
 
     def configure_optimizers(self):
         optimizer = instantiate(self._optimizer_config, self.model.parameters())
@@ -48,14 +53,19 @@ class ClsTrainer(LightningModule):
 
     def training_step(self, batch: Batch, batch_idx):
         predicted_logits = self.model.forward_data(batch)
-        loss = torch.nn.functional.cross_entropy(predicted_logits, batch.y, reduction="mean")
-        self._mean_loss_per_epoch(batch.num_graphs * loss.item(), batch.num_graphs)
+        loss = self._loss_module(predicted_logits, batch.y)
+        self._train_accuracy(predicted_logits, batch.y)
+        self.log(f"{self._train_stage}/Accuracy",
+                 self._train_accuracy,
+                 on_step=False,
+                 on_epoch=True)
+        self._mean_train_loss_per_epoch(batch.num_graphs * loss.item(), batch.num_graphs)
         return loss
 
     def training_epoch_end(self, outputs) -> None:
-        val_loss = self._mean_loss_per_epoch.compute().cpu().item()
-        self.log(f"{self._train_stage}/NLL", val_loss)
-        self._mean_loss_per_epoch.reset()
+        train_loss = self._mean_train_loss_per_epoch.compute().cpu().item()
+        self.log(f"{self._train_stage}/NLL", train_loss)
+        self._mean_train_loss_per_epoch.reset()
 
     def _log_point_cloud(self, data: Data, batch_idx):
         point_size_config = {
@@ -105,6 +115,8 @@ class ClsTrainer(LightningModule):
         self.log(f"{self._test_stage}/Accuracy", self._accuracy, on_step=False, on_epoch=True)
 
         predicted_labels = self.model.predict_class(predicted_logits)
+        loss = self._loss_module(predicted_logits, batch.y)
+        self._mean_val_loss_per_epoch(batch.num_graphs * loss.item(), batch.num_graphs)
 
         incorrect_example_index = torch.nonzero(predicted_labels != batch.y).view(-1)
 
@@ -125,6 +137,9 @@ class ClsTrainer(LightningModule):
 
         log_name = f"{self._test_stage}/Conf_matrix"
 
+        val_loss = self._mean_val_loss_per_epoch.compute().cpu().item()
+        self.log(f"{self._test_stage}/NLL", val_loss)
+
         if isinstance(self.logger, TensorBoardLogger):
             self.logger.experiment.add_figure(log_name, fig, global_step=self.global_step)
         elif isinstance(self.logger, WandbLogger):
@@ -144,3 +159,4 @@ class ClsTrainer(LightningModule):
 
         self._is_log_incorrect = False
         self._conf_matrix.reset()
+        self._mean_val_loss_per_epoch.reset()
