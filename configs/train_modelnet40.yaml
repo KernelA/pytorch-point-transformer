@@ -21,6 +21,10 @@ log_dir: "logs"
 config_dir: "config"
 checkpoint_dir: "checkpoint"
 
+logger:
+  name: 'modelnet40'
+  log_model: 'all'
+
 model:
   num_transformer_blocks: 4 
   
@@ -28,7 +32,7 @@ params:
   seed: 300
   precision: 16
   max_epochs: 200
-  train_batch_size: 32
+  train_batch_size: 64
   test_batch_size: 128
 
 model_trainer:

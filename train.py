@@ -4,6 +4,7 @@ import json
 import log_set
 import hydra
 from omegaconf import OmegaConf
+from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning import seed_everything, LightningDataModule, LightningModule, Trainer
 
 
@@ -13,6 +14,8 @@ def main(config):
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datasets)
     datamodule.setup("fit")
     datamodule.setup("validate")
+
+    assert "class_mapping" not in config, "Key 'class_mapping' already exits in the config"
 
     class_mapping = datamodule.get_class_mapping()
 
@@ -40,6 +43,10 @@ def main(config):
 
     log_dir = exp_dir / config.log_dir
     log_dir.mkdir(exist_ok=True, parents=True)
+
+    if isinstance(model_trainer.logger, WandbLogger):
+        config["class_mapping"] = class_mapping
+        model_trainer.logger.experiment.config.update(config)
 
     trainer: Trainer = hydra.utils.instantiate(config.trainer)
     trainer.fit(model_trainer, datamodule=datamodule)

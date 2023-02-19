@@ -12,7 +12,7 @@ defaults:
   - transforms@train_transform: simple_shapes/train_transform
   - transforms@test_transform: simple_shapes/test_transform
   - transforms@pre_transform: simple_shapes/pre_transform
-  - logger: tensorboard
+  - logger: tensorboard 
   - _self_
 
 base_exp_dir: "./exp/simple_shapes"
@@ -64,7 +64,6 @@ trainer:
       min_delta: 0.05
       mode: ${...callbacks[0].mode}
       strict: true
-
   logger: ${logger}
 
 

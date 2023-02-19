@@ -89,6 +89,8 @@ class ModelNet(data.Dataset):
         for path in self.processed_paths:
             self._class_labels.append(torch.load(path).y)
 
+        assert len(self._class_labels) == len(self.processed_file_names)
+
     @property
     def raw_file_names(self) -> List[str]:
         return []

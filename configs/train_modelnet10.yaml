@@ -21,6 +21,10 @@ log_dir: "logs"
 config_dir: "config"
 checkpoint_dir: "checkpoint"
 
+logger:
+  name: 'modelnet10'
+  log_model: 'all'
+
 params:
   seed: 300
   precision: 16
