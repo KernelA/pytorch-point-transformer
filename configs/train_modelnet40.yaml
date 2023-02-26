@@ -6,7 +6,7 @@ hydra:
 
 defaults:
   - datasets: modelnet40
-  - optimizer: sgd
+  - optimizer: adamn
   - model: cls_model
   - scheduler: multistep
   - logger: wandb

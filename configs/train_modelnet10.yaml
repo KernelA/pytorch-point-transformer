@@ -29,7 +29,7 @@ params:
   seed: 300
   precision: 16
   max_epochs: 200
-  train_batch_size: 32
+  train_batch_size: 64
   test_batch_size: 128
 
 model_trainer:
