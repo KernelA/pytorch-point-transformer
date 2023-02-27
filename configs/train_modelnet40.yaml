@@ -22,7 +22,7 @@ config_dir: "config"
 checkpoint_dir: "checkpoint"
 
 logger:
-  name: 'modelnet40'
+  project: 'pytorch-point-transformer-modelnet40'
   log_model: 'all'
 
 model:
