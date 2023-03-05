@@ -263,11 +263,14 @@ class ModelNetDataset(LightningDataModule):
     def train_dataloader(self):
         return loader.DataLoader(self.train_dataset,
                                  pin_memory=True,
-                                 batch_sampler=StratifiedBatchSampler(
-                                     batch_size=self.train_load_sett.batch_size,
-                                     shuffle=True,
-                                     class_labels=self.train_dataset.class_labels()
-                                 ),
+                                 batch_size=self.train_load_sett.batch_size,
+                                 shuffle=True,
+                                 drop_last=True,
+                                 #  batch_sampler=StratifiedBatchSampler(
+                                 #      batch_size=self.train_load_sett.batch_size,
+                                 #      shuffle=True,
+                                 #      class_labels=self.train_dataset.class_labels()
+                                 #  ),
                                  num_workers=self.train_load_sett.num_workers)
 
     def val_dataloader(self):
