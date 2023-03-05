@@ -1,5 +1,6 @@
 import pathlib
 import json
+import os
 
 import log_set
 import hydra
@@ -44,12 +45,20 @@ def main(config):
     log_dir = exp_dir / config.log_dir
     log_dir.mkdir(exist_ok=True, parents=True)
 
+    ckpt_path = None
+
     if isinstance(model_trainer.logger, WandbLogger):
         config["class_mapping"] = class_mapping
         model_trainer.logger.experiment.config.update(config)
+        run = model_trainer.logger.experiment
+
+        if run.resumed:
+            artifact = run.use_artifact(f"model-{run.id}:latest")
+            datadir = artifact.download()
+            ckpt_path = os.path.join(datadir, "model.ckpt")
 
     trainer: Trainer = hydra.utils.instantiate(config.trainer)
-    trainer.fit(model_trainer, datamodule=datamodule)
+    trainer.fit(model_trainer, datamodule=datamodule, ckpt_path=ckpt_path)
 
 
 if __name__ == "__main__":

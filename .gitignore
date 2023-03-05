@@ -144,3 +144,4 @@ exp/
 !configs/datasets
 demo_data/
 wandb/
+artifacts/
