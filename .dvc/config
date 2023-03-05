@@ -4,3 +4,5 @@
     enabled = false
     config_dir = configs
     config_name = train_simple_shapes
+[cache]
+    type = "reflink,hardlink,symlink"
