@@ -47,17 +47,20 @@ def main(config):
 
     ckpt_path = None
 
-    if isinstance(model_trainer.logger, WandbLogger):
-        config["class_mapping"] = class_mapping
-        model_trainer.logger.experiment.config.update(config)
-        run = model_trainer.logger.experiment
+    trainer: Trainer = hydra.utils.instantiate(config.trainer)
+
+    if isinstance(trainer.logger, WandbLogger):
+        trainer.logger.experiment.config.update(OmegaConf.to_object(config))
+        cls_config = {"class_mapping": class_mapping}
+        trainer.logger.experiment.config.update(cls_config)
+
+        run = trainer.logger.experiment
 
         if run.resumed:
             artifact = run.use_artifact(f"model-{run.id}:latest")
             datadir = artifact.download()
             ckpt_path = os.path.join(datadir, "model.ckpt")
 
-    trainer: Trainer = hydra.utils.instantiate(config.trainer)
     trainer.fit(model_trainer, datamodule=datamodule, ckpt_path=ckpt_path)
 
 
