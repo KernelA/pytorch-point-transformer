@@ -50,16 +50,17 @@ def main(config):
     trainer: Trainer = hydra.utils.instantiate(config.trainer)
 
     if isinstance(trainer.logger, WandbLogger):
-        trainer.logger.experiment.config.update(OmegaConf.to_object(config))
-        cls_config = {"class_mapping": class_mapping}
-        trainer.logger.experiment.config.update(cls_config)
-
         run = trainer.logger.experiment
-
+        
         if run.resumed:
             artifact = run.use_artifact(f"model-{run.id}:latest")
             datadir = artifact.download()
             ckpt_path = os.path.join(datadir, "model.ckpt")
+        else:
+            trainer.logger.experiment.config.update(OmegaConf.to_object(config))
+            cls_config = {"class_mapping": class_mapping}
+            trainer.logger.experiment.config.update(cls_config)
+            
 
     trainer.fit(model_trainer, datamodule=datamodule, ckpt_path=ckpt_path)
 
