@@ -9,6 +9,7 @@ defaults:
   - optimizer: sgd
   - model: cls_model
   - scheduler: multistep
+  - loss: focal
   - logger: wandb
   - transforms@train_transform: simple_shapes/train_transform
   - transforms@test_transform: simple_shapes/test_transform
