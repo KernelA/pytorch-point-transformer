@@ -9,6 +9,7 @@ defaults:
   - optimizer: adam
   - model: cls_model
   - scheduler: multistep
+  - loss: focal
   - transforms@train_transform: simple_shapes/train_transform
   - transforms@test_transform: simple_shapes/test_transform
   - transforms@pre_transform: simple_shapes/pre_transform
@@ -43,7 +44,7 @@ trainer:
   check_val_every_n_epoch: 2
   val_check_interval: 1.0
   deterministic: false
-  fast_dev_run: false
+  fast_dev_run: true
   accelerator: 'gpu'
   devices: 1
   precision: ${params.precision}

@@ -27,7 +27,9 @@ def main(config):
         model=hydra.utils.instantiate(config.model),
         optimizer_config=config.optimizer,
         scheduler_config=config.scheduler,
-        cls_mapping=class_mapping)
+        cls_mapping=class_mapping,
+        loss=hydra.utils.instantiate(config.loss)
+        )
 
     exp_dir = pathlib.Path(config.base_exp_dir) / config.exp_dir
     exp_dir.mkdir(exist_ok=True, parents=True)
@@ -51,7 +53,7 @@ def main(config):
 
     if isinstance(trainer.logger, WandbLogger):
         run = trainer.logger.experiment
-        
+
         if run.resumed:
             artifact = run.use_artifact(f"model-{run.id}:latest")
             datadir = artifact.download()
@@ -60,7 +62,7 @@ def main(config):
             trainer.logger.experiment.config.update(OmegaConf.to_object(config))
             cls_config = {"class_mapping": class_mapping}
             trainer.logger.experiment.config.update(cls_config)
-            
+
 
     trainer.fit(model_trainer, datamodule=datamodule, ckpt_path=ckpt_path)
 

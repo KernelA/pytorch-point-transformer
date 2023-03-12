@@ -15,6 +15,16 @@ def generator():
     return generator
 
 
+@pytest.fixture(scope="function")
+def logits_multiclass_tensor(generator):
+    return torch.rand((10, 3), generator=generator)
+
+
+@pytest.fixture(scope="function")
+def multiclass_labels(logits_multiclass_tensor, generator):
+    return torch.randint(0, logits_multiclass_tensor.shape[1], (10,), generator=generator)
+
+
 @pytest.fixture(scope="session")
 def session_generator():
     generator = torch.Generator()

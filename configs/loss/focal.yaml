@@ -1,0 +1,4 @@
+_target_: training.losses.FocalLoss
+reduction: 'mean'
+gamma: 1.0
+alpha: 1.0

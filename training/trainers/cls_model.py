@@ -1,18 +1,17 @@
-from typing import Dict, Optional
 import io
+from typing import Dict, Optional
 
 import torch
-from torch import nn
-from pytorch_lightning import LightningModule
-from torch_geometric.data import Batch, Data
 from hydra.utils import instantiate
-from torchmetrics import ConfusionMatrix, Accuracy
-from sklearn.metrics import ConfusionMatrixDisplay
+from PIL import Image
+from pytorch_lightning import LightningModule
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
-from PIL import Image
+from sklearn.metrics import ConfusionMatrixDisplay
+from torch import nn
+from torch_geometric.data import Batch, Data
+from torchmetrics import Accuracy, ConfusionMatrix
 import wandb
-
 from point_transformer.models import ClsPointTransformer
 
 from ..metrics import AccMean
@@ -24,7 +23,8 @@ class ClsTrainer(LightningModule):
                  model: ClsPointTransformer,
                  cls_mapping: Dict[str, int],
                  optimizer_config: Dict,
-                 scheduler_config: Optional[Dict]):
+                 scheduler_config: Optional[Dict],
+                 loss: torch.nn.Module):
         super().__init__()
         self.model = model
         self.cls_mapping = cls_mapping
@@ -41,7 +41,7 @@ class ClsTrainer(LightningModule):
         self._test_stage = "Test"
         self._train_stage = "Train"
         self._is_log_incorrect = False
-        self._loss_module = nn.CrossEntropyLoss(reduction="mean")
+        self._loss = loss
 
     def configure_optimizers(self):
         optimizer = instantiate(self._optimizer_config, self.model.parameters())
@@ -53,7 +53,7 @@ class ClsTrainer(LightningModule):
 
     def training_step(self, batch: Batch, batch_idx):
         predicted_logits = self.model.forward_data(batch)
-        loss = self._loss_module(predicted_logits, batch.y)
+        loss = self._loss(predicted_logits, batch.y)
         self._train_accuracy(predicted_logits, batch.y)
         self.log(f"{self._train_stage}/Accuracy",
                  self._train_accuracy,
@@ -115,7 +115,7 @@ class ClsTrainer(LightningModule):
         self.log(f"{self._test_stage}/Accuracy", self._accuracy, on_step=False, on_epoch=True)
 
         predicted_labels = self.model.predict_class(predicted_logits)
-        loss = self._loss_module(predicted_logits, batch.y)
+        loss = self._loss(predicted_logits, batch.y)
         self._mean_val_loss_per_epoch(batch.num_graphs * loss.item(), batch.num_graphs)
 
         incorrect_example_index = torch.nonzero(predicted_labels != batch.y).view(-1)
