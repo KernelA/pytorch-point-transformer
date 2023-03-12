@@ -44,7 +44,7 @@ trainer:
   check_val_every_n_epoch: 2
   val_check_interval: 1.0
   deterministic: false
-  fast_dev_run: true
+  fast_dev_run: false
   accelerator: 'gpu'
   devices: 1
   precision: ${params.precision}
