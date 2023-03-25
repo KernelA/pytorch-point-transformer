@@ -1,12 +1,13 @@
 from typing import Union
 
-from torch import nn
 import torch
-from torch_geometric.nn import global_mean_pool
+from torch import nn
 from torch_geometric.data import Batch, Data
+from torch_geometric.nn import global_mean_pool
 
 from ..blocks import PointTransformerBlock, TransitionDown
-from ..types import PointSetBatchInfo
+from ..layers import MLP
+from ..types import PointSetBatchInfo, TwoInputsType
 
 
 class TupleInputSeq(nn.Sequential):
@@ -17,20 +18,6 @@ class TupleInputSeq(nn.Sequential):
         for module in self:
             input = module(input)
         return input
-
-
-class InitMapping(nn.Module):
-    def __init__(self, in_features: int, out_features: int) -> None:
-        super().__init__()
-        self._mapping = nn.Sequential(
-            nn.Linear(in_features, out_features),
-            nn.BatchNorm1d(out_features),
-            nn.Linear(out_features, out_features, bias=False),
-        )
-
-    def forward(self, input_data: PointSetBatchInfo) -> PointSetBatchInfo:
-        features, positions, batch = input_data
-        return self._mapping(features), positions, batch
 
 
 class ClsPointTransformer(nn.Module):
@@ -44,7 +31,7 @@ class ClsPointTransformer(nn.Module):
         out_features = 32
 
         transformer_blocks = [
-            InitMapping(in_features, out_features),
+            MLP(in_features, out_features),
             PointTransformerBlock(in_out_features=out_features,
                                   compress_dim=out_features // 2, num_neighbors=num_neighs, is_jit=is_jit)]
 

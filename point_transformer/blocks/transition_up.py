@@ -1,17 +1,7 @@
-from typing import Tuple
-
 from torch import nn
-import torch
 from torch_geometric.nn import knn_interpolate
 
-from ..types import PointSetBatchInfo
-
-TwoInputsType = Tuple[torch.Tensor,
-                      torch.Tensor,
-                      torch.LongTensor,
-                      torch.Tensor,
-                      torch.Tensor,
-                      torch.LongTensor]
+from ..types import PointSetBatchInfo, TwoInputsType
 
 
 class TransitionUp(nn.Module):
@@ -34,11 +24,14 @@ class TransitionUp(nn.Module):
             positions_1 [N x num_coords] - position of points. By default num_coords is equal to 3.
             batch_1 [N x 1] - batch indices
 
-            features_2 [N x in_features] - node features
-            positions_2 [N x num_coords] - position of points. By default num_coords is equal to 3.
-            batch_2 [N x 1] - batch indices
+            features_2 [L x in_features] - node features
+            positions_2 [L x num_coords] - position of points. By default num_coords is equal to 3.
+            batch_2 [L x 1] - batch indices
+
+            N < L
         """
         features_1, positions_1, batch_1, features_2, positions_2, batch_2 = fpb_data
+        assert positions_1.shape[0] <= positions_2.shape[0], "Number of interpolated features must be less or equal than original"
 
         features_1 = self.linear(features_1)
         features_2 = self.linear_residual(features_2)

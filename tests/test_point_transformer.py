@@ -1,5 +1,6 @@
 import torch
-from point_transformer import PointTransformerLayer, PointTransformerBlock
+
+from point_transformer import PointTransformerBlock, PointTransformerLayer
 
 from .conftest import NUM_COORDS
 
