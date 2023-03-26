@@ -5,7 +5,7 @@ from ..types import PointSetBatchInfo, TwoInputsType
 
 
 class TransitionUp(nn.Module):
-    def __init__(self, *, in_features: int, out_features: int):
+    def __init__(self, *, in_features: int, in_features_original: int, out_features: int):
         super().__init__()
         self.linear = nn.Sequential(
             nn.Linear(in_features, out_features),
@@ -13,7 +13,7 @@ class TransitionUp(nn.Module):
             nn.ReLU(inplace=True)
         )
         self.linear_residual = nn.Sequential(
-            nn.Linear(in_features, out_features),
+            nn.Linear(in_features_original, out_features),
             nn.BatchNorm1d(out_features),
             nn.ReLU(inplace=True)
         )

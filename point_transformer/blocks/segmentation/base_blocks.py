@@ -58,6 +58,7 @@ class DownBlock(Module):
 class UpBlock(Module):
     def __init__(self, *,
                  in_features: int,
+                 in_features_original: int,
                  out_features: int,
                  compress_dim: int,
                  num_neighbors: int,
@@ -68,6 +69,7 @@ class UpBlock(Module):
         self.up = TransitionUp(
             in_features=in_features,
             out_features=out_features,
+            in_features_original=in_features_original
         )
         self.transformer_block = PointTransformerBlock(in_out_features=out_features,
                                                        compress_dim=compress_dim,

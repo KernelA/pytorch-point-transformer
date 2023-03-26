@@ -1,13 +1,11 @@
-from typing import Union
 
-import torch
 from torch import nn
-from torch_geometric.data import Batch, Data
 from torch_geometric.nn import global_mean_pool
 
 from ..blocks import PointTransformerBlock, TransitionDown
 from ..layers import MLP
-from ..types import PointSetBatchInfo, TwoInputsType
+from ..types import PointSetBatchInfo
+from .base_model import BaseModel
 
 
 class TupleInputSeq(nn.Sequential):
@@ -20,7 +18,7 @@ class TupleInputSeq(nn.Sequential):
         return input
 
 
-class ClsPointTransformer(nn.Module):
+class ClsPointTransformer(BaseModel):
     def __init__(self, in_features: int,
                  num_classes: int,
                  num_neighs: int = 16,
@@ -65,18 +63,3 @@ class ClsPointTransformer(nn.Module):
         assert positions.shape[1] == 3, "Expected 3D coordinates"
         new_features, _, new_batch = self.feature_extractor((features, positions, batch))
         return global_mean_pool(new_features, new_batch)
-
-    @torch.jit.unused
-    def forward_data(self, data: Union[Data, Batch]):
-        return self.forward((data.x, data.pos, data.batch))
-
-    @torch.jit.unused
-    def predict_class_data(self, data: Union[Data, Batch]) -> torch.Tensor:
-        return self.predict_class(self.forward_data(data))
-
-    @torch.jit.unused
-    def get_embedding_data(self, data: Union[Data, Batch]) -> torch.Tensor:
-        return self.get_embedding((data.x, data.pos, data.batch))
-
-    def predict_class(self, predicted_logits: torch.Tensor) -> torch.Tensor:
-        return predicted_logits.argmax(dim=-1)

@@ -45,6 +45,7 @@ def test_up_block(sample_batch, sample_downsampled_batch):
 
     up_block = UpBlock(
         in_features=sample_batch.x.shape[1],
+        in_features_original=sample_batch.x.shape[1],
         out_features=out_features,
         compress_dim=2,
         num_neighbors=3,
@@ -74,6 +75,7 @@ def test_paired_block_with_mlp(sample_batch):
 
     up_block = UpBlock(
         in_features=sample_batch.x.shape[1],
+        in_features_original=sample_batch.x.shape[1],
         out_features=num_out_features,
         compress_dim=2,
         num_neighbors=3,
@@ -104,6 +106,7 @@ def test_paired_block_with_up_down(sample_batch):
     up_block = UpBlock(
         in_features=sample_batch.x.shape[1],
         out_features=num_out_features,
+        in_features_original=sample_batch.x.shape[1],
         compress_dim=2,
         num_neighbors=3,
         is_jit=False,
