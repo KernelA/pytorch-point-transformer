@@ -11,8 +11,9 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch import nn
 from torch_geometric.data import Batch, Data
 from torchmetrics import Accuracy, ConfusionMatrix
+
 import wandb
-from point_transformer.models import ClsPointTransformer
+from point_transformer.models.base_model import BaseModel
 
 from ..metrics import AccMean
 
@@ -20,7 +21,7 @@ from ..metrics import AccMean
 class ClsTrainer(LightningModule):
     def __init__(self,
                  *,
-                 model: ClsPointTransformer,
+                 model: BaseModel,
                  cls_mapping: Dict[str, int],
                  optimizer_config: Dict,
                  scheduler_config: Optional[Dict],
@@ -38,7 +39,7 @@ class ClsTrainer(LightningModule):
         self._mean_val_loss_per_epoch = AccMean()
         self._class_labels = tuple(name for name, _ in sorted(
             self.cls_mapping.items(), key=lambda x: x[1]))
-        self._test_stage = "Test"
+        self._test_stage = "Valid"
         self._train_stage = "Train"
         self._is_log_incorrect = False
         self._loss = loss
@@ -115,7 +116,9 @@ class ClsTrainer(LightningModule):
         self.log(f"{self._test_stage}/Accuracy", self._accuracy, on_step=False, on_epoch=True)
 
         predicted_labels = self.model.predict_class(predicted_logits)
+
         loss = self._loss(predicted_logits, batch.y)
+
         self._mean_val_loss_per_epoch(batch.num_graphs * loss.item(), batch.num_graphs)
 
         incorrect_example_index = torch.nonzero(predicted_labels != batch.y).view(-1)

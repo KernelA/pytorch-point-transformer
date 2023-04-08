@@ -3,7 +3,6 @@ tensorboard~=2.12.0
 matplotlib~=3.5.0
 dvc~=2.43.0
 hydra-core~=1.2.0
-tzlocal
 colorlog~=5.0
 trimesh~=3.20.0
 gdown~=3.13.0
@@ -15,4 +14,5 @@ joblib~=1.2.0
 fs~=2.4.16
 protobuf<=3.20
 scikit-learn~=1.2.1
-
+h5py~=3.8.0
+hdf5plugin~=4.1.1
