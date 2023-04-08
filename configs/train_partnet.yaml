@@ -1,0 +1,84 @@
+hydra:
+  run:
+    dir: . 
+  output_subdir: null 
+
+
+defaults:
+  - datasets: partnet
+  - optimizer: sgd
+  - model: cls_model
+  - scheduler: multistep
+  - loss: focal
+  - logger: wandb
+  - transforms@train_transform: partnet/transform
+  - transforms@test_transform: ${transforms@train_transform}
+  - _self_
+
+base_exp_dir: "./exp/partnet"
+exp_dir: "exp"
+log_dir: "logs"
+config_dir: "config"
+checkpoint_dir: "checkpoint"
+
+logger:
+  project: 'pytorch-point-transformer-partnet'
+  log_model: 'all'
+
+model:
+  num_transformer_blocks: 4 
+  
+params:
+  seed: 300
+  precision: 16
+  max_epochs: 200
+  train_batch_size: 64
+  test_batch_size: 128
+
+model_trainer:
+  _target_: training.trainers.cls_model.ClsTrainer
+  _recursive_: false
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  amp_backend: "native"
+  auto_select_gpus: true
+  benchmark: true
+  check_val_every_n_epoch: 5
+  deterministic: false
+  fast_dev_run: false
+  accelerator: 'gpu'
+  devices: 1
+  precision: ${params.precision}
+  max_epochs: ${params.max_epochs}
+  inference_mode: true
+  log_every_n_steps: 10
+  callbacks:
+    - _target_: pytorch_lightning.callbacks.ModelCheckpoint
+      dirpath: ${base_exp_dir}/${exp_dir}/${checkpoint_dir}
+      filename: '{epoch}-test-acc-{Test/Accuracy:.2f}'
+      monitor: "Test/Accuracy"
+      auto_insert_metric_name: false
+      every_n_epochs: ${...check_val_every_n_epoch}
+      save_last: true
+      mode: "max"
+    - _target_: pytorch_lightning.callbacks.LearningRateMonitor
+      logging_interval: "epoch"
+      log_momentum: false
+    # - _target_: pytorch_lightning.callbacks.EarlyStopping
+    #   monitor: ${...callbacks[0].monitor}
+    #   min_delta: 0.01
+    #   mode: ${...callbacks[0].mode}
+    #   strict: true
+
+  logger: ${logger}
+
+datasets:
+  train_load_sett:
+    transform: ${train_transform}
+    num_workers: 2
+    batch_size: ${params.train_batch_size}
+  test_load_sett:
+    transform: ${test_transform}
+    num_workers: 2
+    batch_size: ${params.test_batch_size}

@@ -1,0 +1,17 @@
+_target_: training.data.partnet.partnet.PartNetDataset
+data_root: ./datasets/partnet
+dataset_dir: './datasets/raw/partnet'
+train_load_sett: 
+  _target_: training.data.dataloader_settings.LoadSettings
+  num_workers: 2
+  batch_size: 64
+  pre_transform: null
+  pre_filter: null
+  transform: null
+test_load_sett:
+  _target_: training.data.dataloader_settings.LoadSettings
+  num_workers: 2
+  batch_size: 128
+  pre_transform: null
+  pre_filter: null
+  transform: null
