@@ -1,4 +1,4 @@
-tqdm>=4.60,<4.70
+tqdm~=4.60
 tensorboard~=2.12.0
 matplotlib~=3.7.0
 dvc~=2.43.0

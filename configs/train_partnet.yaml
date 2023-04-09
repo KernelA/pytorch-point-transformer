@@ -11,7 +11,7 @@ defaults:
   - scheduler: multistep
   - loss: cross_entropy
   - logger: tensorboard
-  - transforms@train_transform: partnet/transform
+  - transforms@train_transform: partnet/pre_transform
   - transforms@test_transform: ${transforms@train_transform}
   - _self_
 
@@ -21,16 +21,16 @@ log_dir: "logs"
 config_dir: "config"
 checkpoint_dir: "checkpoint"
 
-logger:
-  project: 'pytorch-point-transformer-partnet'
-  log_model: 'all'
+# logger:
+  # project: 'pytorch-point-transformer-partnet'
+  # log_model: 'all'
 
 params:
   seed: 300
   precision: 16
   max_epochs: 200
-  train_batch_size: 32
-  test_batch_size: 64
+  train_batch_size: 16
+  test_batch_size: 16
 
 model_trainer:
   _target_: training.trainers.segm_model.SegmTrainer
@@ -43,11 +43,13 @@ trainer:
   benchmark: true
   check_val_every_n_epoch: 5
   deterministic: false
-  fast_dev_run: true
+  fast_dev_run: false
   accelerator: 'gpu'
   devices: 1
   precision: ${params.precision}
   max_epochs: ${params.max_epochs}
+  limit_train_batches: 1.0
+  limit_val_batches: 1.0
   inference_mode: true
   log_every_n_steps: 10
   callbacks:
@@ -72,10 +74,10 @@ trainer:
 
 datasets:
   train_load_sett:
-    transform: ${train_transform}
+    pre_transform: ${train_transform}
     num_workers: 2
     batch_size: ${params.train_batch_size}
   test_load_sett:
-    transform: ${test_transform}
+    pre_transform: ${train_transform}
     num_workers: 2
     batch_size: ${params.test_batch_size}

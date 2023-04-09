@@ -67,7 +67,7 @@ class FPS(BaseTransform):
         if isinstance(data, Batch):
             batch = data.batch.to(self.device)
 
-        index = fps(data.pos.to(self.device), ratio=ratio, batch=batch).cpu()
+        index = fps(data.pos.to(self.device), ratio=ratio, batch=batch, random_start=False).cpu()
 
         if isinstance(data, Batch):
             new_batch = batch[index]

@@ -14,7 +14,7 @@ class HdfIO:
     def save_dataset(hdf_file, key, numpy_data):
         chunk_size = 1
 
-        compression_opts = hdf5plugin.SZ3(absolute=1e-6)
+        compression_opts = {}
 
         if isinstance(numpy_data.dtype, np.integer):
             compression_opts = hdf5plugin.Zfp(reversible=True)

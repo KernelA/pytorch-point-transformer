@@ -108,7 +108,7 @@ class SegmTrainer(LightningModule):
                     ]
                 ], dtype=torch.uint8), (1, vertices.shape[1], 1))
 
-            colors *= incorrect_label_mask.view(1, -1, 1)
+            colors *= incorrect_label_mask.view(1, -1, 1).cpu()
 
             self.logger.experiment.add_mesh(f"{self._test_stage}/Most_errors_per_point",
                                             vertices=vertices,
@@ -123,7 +123,7 @@ class SegmTrainer(LightningModule):
                     [255, 0, 0]
                 ], dtype=torch.uint8), (vertices.shape[0], 1))
 
-            colors *= incorrect_label_mask.view(-1, 1)
+            colors *= incorrect_label_mask.view(-1, 1).cpu()
 
             self.logger.experiment.log(
                 {
@@ -152,7 +152,8 @@ class SegmTrainer(LightningModule):
         self._mean_val_loss_per_epoch(batch.num_graphs * loss.item(), batch.num_graphs)
 
         incorrect_labels_mask = predicted_labels != batch.y
-        incorrect_label_ratios = torch_scatter.scatter_sum(incorrect_labels_mask, index=batch.batch).to(torch.float32)
+        incorrect_label_ratios = torch_scatter.scatter_sum(
+            incorrect_labels_mask, index=batch.batch).to(torch.float32)
         incorrect_label_ratios /= torch.diff(batch.ptr)
 
         max_incorrect_labels_index = incorrect_label_ratios.argmax()

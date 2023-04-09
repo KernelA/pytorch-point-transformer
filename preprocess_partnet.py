@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 
 import log_set
 from training.data.partnet import HdfIO
-from transforms import FPS
+from transforms import FPS, PosToFloat32
 
 
 def main(args):
@@ -45,7 +45,8 @@ def main(args):
     transforms = Compose(
         [
             NormalizeScale(),
-            FPS(args.num_points, device=args.device)
+            FPS(args.num_points, device=args.device),
+            PosToFloat32()
         ]
     )
 

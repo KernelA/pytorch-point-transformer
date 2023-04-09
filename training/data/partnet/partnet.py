@@ -6,6 +6,7 @@ import h5py
 import torch
 from pytorch_lightning import LightningDataModule
 from torch_geometric.data import Data, DataLoader, Dataset
+from tqdm.auto import tqdm
 
 from ..dataloader_settings import LoadSettings
 
@@ -29,9 +30,10 @@ class PartNet(Dataset):
         assert split_type in ("train", "val"), "Incorrect split type. Expected: 'train', 'val'"
 
         self._file_loc = os.path.join(dataset_dir, f"{split_type}.h5")
-        super().__init__(data_root, transform, pre_transform, pre_filter)
 
-        self._file = None
+        if not os.path.isfile(self._file_loc):
+            raise FileNotFoundError(f"Cannot find: '{self._file_loc}'")
+
         step = 2048
         self._unique_labels = set()
 
@@ -42,9 +44,13 @@ class PartNet(Dataset):
             self.logger.info("Found %d labels in the %s", len(self._unique_labels), split_type)
             self._num_items = f["label_seg"].shape[0]
 
+        self._split_type = split_type
+        self._processed_file_names = [os.path.join(
+            self._split_type, f"sample_{i}.pt") for i in range(self._num_items)]
+        super().__init__(data_root, transform, pre_transform, pre_filter)
+
     def close(self):
-        if self._file is not None:
-            self._file.close()
+        pass
 
     def get_class_mapping(self) -> Dict[str, int]:
         return {i: i for i in self._unique_labels}
@@ -55,30 +61,30 @@ class PartNet(Dataset):
 
     @property
     def processed_file_names(self):
-        return []
+        return self._processed_file_names
 
     def download(self):
         self.logger.warning("Cannot automatically download dataset because of license restriction")
 
     def process(self):
-        self.logger.info(
-            "Skip processing. Expected that you preprocess data in the HDF5. transform and pre_transform will be apply at stage of getting items")
+        with h5py.File(self._file_loc, "r") as f:
+            for i, full_path in tqdm(enumerate(self.processed_paths), total=len(self.processed_paths)):
+                os.makedirs(os.path.dirname(full_path), exist_ok=True)
+                positions = torch.from_numpy(f["pos"][i])
+                point_labels = torch.from_numpy(f["label_seg"][i])
+
+                data = Data(pos=positions, y=point_labels)
+
+                if self.pre_transform is not None:
+                    data = self.pre_transform(data)
+
+                torch.save(data, full_path)
 
     def __len__(self):
         return self._num_items
 
     def __getitem__(self, idx):
-        # init for multiprocessing workers
-        if self._file is None:
-            self._file = h5py.File(self._file_loc, "r")
-
-        positions = torch.from_numpy(self._file["pos"][idx])
-        point_labels = torch.from_numpy(self._file["label_seg"][idx])
-
-        data = Data(pos=positions, y=point_labels)
-
-        if self.pre_transform is not None:
-            data = self.pre_transform(data)
+        data = torch.load(self.processed_paths[idx])
 
         if self.transform is not None:
             data = self.transform(data)

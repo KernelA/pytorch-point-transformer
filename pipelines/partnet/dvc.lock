@@ -10,22 +10,22 @@ stages:
       md5: a3062335adb739db6ffc0a8414f4c051
       size: 310
     - path: ./configs/train_partnet.yaml
-      md5: ffc400120041f48d7db7cf809398b27f
-      size: 2022
+      md5: 3983dbf5a9de3428d5aa251ee25eab62
+      size: 2085
     - path: ./configs/transforms/partnet
       md5: 2499c46d4f24af6562f2cfbe29836a3d.dir
       size: 174
       nfiles: 1
     - path: ./datasets/raw/partnet
-      md5: dd584622dcb0513c63268da925d6c704.dir
-      size: 6185268475
+      md5: ab01a29393978bcbb84a2f7a91a549e2.dir
+      size: 3759056187
       nfiles: 4
     - path: ./prepare_data.py
       md5: 9155e7964b9a17d2d32e12fc3564af0b
       size: 496
     - path: ./training/data/partnet
-      md5: 0712f17fa4a6ea4535e310e5ba0ca4f1.dir
-      size: 17382
+      md5: 8ff8983945f511538d0a82517cf3cf23.dir
+      size: 17571
       nfiles: 6
     outs:
     - path: ./datasets/partnet
@@ -51,8 +51,8 @@ stages:
       md5: 86df11af57086580e0dd7c248d323403
       size: 84
     - path: ./configs/train_partnet.yaml
-      md5: ffc400120041f48d7db7cf809398b27f
-      size: 2022
+      md5: 3983dbf5a9de3428d5aa251ee25eab62
+      size: 2085
     - path: ./configs/transforms/partnet
       md5: 2499c46d4f24af6562f2cfbe29836a3d.dir
       size: 174
@@ -62,8 +62,8 @@ stages:
       size: 344
     outs:
     - path: ./exp/partnet/config.yaml
-      md5: 359a8ed982c90a2cab9e7b1faf84539b
-      size: 3095
+      md5: c7556409aa79a5dac6e2dd467dc91fe6
+      size: 3020
   train:
     cmd: python ./train.py -cn config -cp ./exp/partnet
     deps:
@@ -72,8 +72,8 @@ stages:
       size: 862
       nfiles: 2
     - path: ./exp/partnet/config.yaml
-      md5: 359a8ed982c90a2cab9e7b1faf84539b
-      size: 3095
+      md5: c7556409aa79a5dac6e2dd467dc91fe6
+      size: 3020
     - path: ./point_transformer
       md5: 0c0af67bad35dd1a4fa0cdf0c642e65f.dir
       size: 56346
@@ -86,8 +86,8 @@ stages:
       size: 2221
       nfiles: 4
     - path: ./training/trainers
-      md5: 4aa6c863dde398a1a9cb8cd2d22b132d.dir
-      size: 26835
+      md5: 9d6f52d112058197e8073077dd4c4c25.dir
+      size: 26877
       nfiles: 7
     params:
       exp/partnet/config.yaml:
@@ -105,8 +105,8 @@ stages:
           seed: 300
           precision: 16
           max_epochs: 200
-          train_batch_size: 32
-          test_batch_size: 64
+          train_batch_size: 16
+          test_batch_size: 16
         scheduler:
           _target_: torch.optim.lr_scheduler.MultiStepLR
           milestones:
@@ -125,6 +125,6 @@ stages:
           - _target_: transforms.transformations.FeaturesFromPos
     outs:
     - path: ./exp/partnet/exp
-      md5: f5fa7bc28bc9e469837f9cea2a5fc64f.dir
-      size: 3584
-      nfiles: 2
+      md5: b1160f054fbf72471596d9a599ce750f.dir
+      size: 102319
+      nfiles: 4

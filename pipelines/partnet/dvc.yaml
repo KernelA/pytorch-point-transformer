@@ -18,6 +18,7 @@ stages:
     outs:
       - ${data_root}:
           cache: false
+          persist: true
 
   prepare-config:
     wdir: ../..

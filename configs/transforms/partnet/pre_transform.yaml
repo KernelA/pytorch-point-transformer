@@ -1,4 +1,3 @@
 _target_: torch_geometric.transforms.Compose
 transforms:
-  - _target_: transforms.transformations.PosToFloat32
   - _target_: transforms.transformations.FeaturesFromPos  
