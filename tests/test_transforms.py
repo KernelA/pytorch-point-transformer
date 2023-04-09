@@ -17,7 +17,7 @@ def test_fps_sampling(sample_batch: Batch):
 
     assert new_data.num_nodes == pytest.approx(downsampled_point_size, abs=2)
     assert new_data.num_node_features == data.num_node_features
-    assert new_data.keys == data.keys
+    assert set(new_data.keys) == set(data.keys)
 
 
 def test_fps_sampling_batch(sample_batch: Batch):
@@ -32,7 +32,7 @@ def test_fps_sampling_batch(sample_batch: Batch):
 
         assert new_sample.num_nodes == pytest.approx(downsampled_point_size, abs=2)
         assert new_sample.num_node_features == data_sample.num_node_features
-        assert new_sample.keys == data_sample.keys
+        assert set(new_sample.keys) == set(data_sample.keys)
 
 
 def test_normal_transform():
