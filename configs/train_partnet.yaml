@@ -10,7 +10,7 @@ defaults:
   - model: segm_model
   - scheduler: multistep
   - loss: cross_entropy
-  - logger: tensorboard
+  - logger: wandb
   - transforms@train_transform: partnet/pre_transform
   - transforms@test_transform: ${transforms@train_transform}
   - _self_
@@ -21,16 +21,16 @@ log_dir: "logs"
 config_dir: "config"
 checkpoint_dir: "checkpoint"
 
-# logger:
-  # project: 'pytorch-point-transformer-partnet'
-  # log_model: 'all'
+logger:
+  project: 'pytorch-point-transformer-partnet'
+  log_model: 'all'
 
 params:
   seed: 300
   precision: 16
   max_epochs: 200
-  train_batch_size: 16
-  test_batch_size: 16
+  train_batch_size: 34
+  test_batch_size: 64
 
 model_trainer:
   _target_: training.trainers.segm_model.SegmTrainer
