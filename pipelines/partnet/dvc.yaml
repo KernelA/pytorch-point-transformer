@@ -34,25 +34,25 @@ stages:
     outs:
       - ${base_exp_dir}/config.yaml
 
-  # train:
-  #   wdir: ../..
-  #   cmd: python ./train.py -cn config -cp ${base_exp_dir}
-  #   params:
-  #     - ${base_exp_dir}/config.yaml:
-  #       - params
-  #       - optimizer
-  #       - scheduler
-  #       - model
-  #       - train_transform
-  #       - test_transform
-  #   deps:
-  #     - ./train.py
-  #     - ./point_transformer
-  #     - ./training/metrics
-  #     - ./training/trainers
-  #     - ${data_root}
-  #     - ${base_exp_dir}/config.yaml
-  #   outs:
-  #     - ${base_exp_dir}/${exp_dir}:
-  #         cache: false
+  train:
+    wdir: ../..
+    cmd: python ./train.py -cn config -cp ${base_exp_dir}
+    params:
+      - ${base_exp_dir}/config.yaml:
+        - params
+        - optimizer
+        - scheduler
+        - model
+        - train_transform
+        - test_transform
+    deps:
+      - ./train.py
+      - ./point_transformer
+      - ./training/metrics
+      - ./training/trainers
+      - ${data_root}
+      - ${base_exp_dir}/config.yaml
+    outs:
+      - ${base_exp_dir}/${exp_dir}:
+          cache: false
 

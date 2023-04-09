@@ -3,18 +3,17 @@ from torch import nn
 
 from ..blocks.segmentation import (DownBlock, MLPBlock, PairedBlock,
                                    PairedBlockWithSkipConnection, UpBlock)
-from ..layers.mlp import MLP
 from ..types import PointSetBatchInfo
 from .base_model import BaseModel
 
 
-class PointSegmPointTransformer(BaseModel):
+class SegmPointTransformer(BaseModel):
     def __init__(self,
                  in_features: int,
                  num_classes: int,
                  num_neighs: int = 16,
                  num_paired_blocks_with_skip_connection: int = 1,
-                 compress_dim_ratio_from_input: float = 1.0,
+                 #  compress_dim_ratio_from_input: float = 1.0,
                  is_jit: bool = False):
         assert num_paired_blocks_with_skip_connection > 0
 

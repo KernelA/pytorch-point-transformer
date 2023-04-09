@@ -31,18 +31,20 @@ class PartNet(Dataset):
         self._file_loc = os.path.join(dataset_dir, f"{split_type}.h5")
         super().__init__(data_root, transform, pre_transform, pre_filter)
 
-        self._file = h5py.File(self._file_loc, "r")
+        self._file = None
         step = 2048
         self._unique_labels = set()
 
-        for i in range(0, self._file["label_seg"].shape[0], step):
-            self._unique_labels.update(map(int, self._file["label_seg"][i: i + step].flat))
+        with h5py.File(self._file_loc, "r") as f:
+            for i in range(0, f["label_seg"].shape[0], step):
+                self._unique_labels.update(map(int, f["label_seg"][i: i + step].flat))
 
-        self.logger.info("Found %d labels in the %s", len(self._unique_labels), split_type)
-        self._num_items = self._file["label_seg"].shape[0]
+            self.logger.info("Found %d labels in the %s", len(self._unique_labels), split_type)
+            self._num_items = f["label_seg"].shape[0]
 
     def close(self):
-        self._file.close()
+        if self._file is not None:
+            self._file.close()
 
     def get_class_mapping(self) -> Dict[str, int]:
         return {i: i for i in self._unique_labels}
@@ -59,12 +61,17 @@ class PartNet(Dataset):
         self.logger.warning("Cannot automatically download dataset because of license restriction")
 
     def process(self):
-        self.logger.info("Skip processing")
+        self.logger.info(
+            "Skip processing. Expected that you preprocess data in the HDF5. transform and pre_transform will be apply at stage of getting items")
 
     def __len__(self):
         return self._num_items
 
     def __getitem__(self, idx):
+        # init for multiprocessing workers
+        if self._file is None:
+            self._file = h5py.File(self._file_loc, "r")
+
         positions = torch.from_numpy(self._file["pos"][idx])
         point_labels = torch.from_numpy(self._file["label_seg"][idx])
 

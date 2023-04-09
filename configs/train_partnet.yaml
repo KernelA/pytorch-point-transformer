@@ -7,10 +7,10 @@ hydra:
 defaults:
   - datasets: partnet
   - optimizer: sgd
-  - model: cls_model
+  - model: segm_model
   - scheduler: multistep
-  - loss: focal
-  - logger: wandb
+  - loss: cross_entropy
+  - logger: tensorboard
   - transforms@train_transform: partnet/transform
   - transforms@test_transform: ${transforms@train_transform}
   - _self_
@@ -25,18 +25,15 @@ logger:
   project: 'pytorch-point-transformer-partnet'
   log_model: 'all'
 
-model:
-  num_transformer_blocks: 4 
-  
 params:
   seed: 300
   precision: 16
   max_epochs: 200
-  train_batch_size: 64
-  test_batch_size: 128
+  train_batch_size: 32
+  test_batch_size: 64
 
 model_trainer:
-  _target_: training.trainers.cls_model.ClsTrainer
+  _target_: training.trainers.segm_model.SegmTrainer
   _recursive_: false
 
 trainer:
@@ -46,7 +43,7 @@ trainer:
   benchmark: true
   check_val_every_n_epoch: 5
   deterministic: false
-  fast_dev_run: false
+  fast_dev_run: true
   accelerator: 'gpu'
   devices: 1
   precision: ${params.precision}
@@ -56,8 +53,8 @@ trainer:
   callbacks:
     - _target_: pytorch_lightning.callbacks.ModelCheckpoint
       dirpath: ${base_exp_dir}/${exp_dir}/${checkpoint_dir}
-      filename: '{epoch}-test-acc-{Test/Accuracy:.2f}'
-      monitor: "Test/Accuracy"
+      filename: '{epoch}-test-acc-{Test/mIOU:.2f}'
+      monitor: "Test/mIOU"
       auto_insert_metric_name: false
       every_n_epochs: ${...check_val_every_n_epoch}
       save_last: true

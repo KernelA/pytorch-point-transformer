@@ -10,8 +10,8 @@ stages:
       md5: a3062335adb739db6ffc0a8414f4c051
       size: 310
     - path: ./configs/train_partnet.yaml
-      md5: 2d9d530de365eaec73bb194d703bb8cc
-      size: 2057
+      md5: ffc400120041f48d7db7cf809398b27f
+      size: 2022
     - path: ./configs/transforms/partnet
       md5: 2499c46d4f24af6562f2cfbe29836a3d.dir
       size: 174
@@ -24,11 +24,107 @@ stages:
       md5: 9155e7964b9a17d2d32e12fc3564af0b
       size: 496
     - path: ./training/data/partnet
-      md5: 03e0d7b6c449e88eb88355c28dcae97b.dir
-      size: 17096
+      md5: 0712f17fa4a6ea4535e310e5ba0ca4f1.dir
+      size: 17382
       nfiles: 6
     outs:
     - path: ./datasets/partnet
       md5: 32a991ebfb0ca974700ad99ea844ed3c.dir
       size: 862
+      nfiles: 2
+  prepare-config:
+    cmd: python ./resolve_config.py -cn train_partnet
+    deps:
+    - path: ./configs/datasets/partnet.yaml
+      md5: 097a4b8ef60337d96e3d44ce47d195fa
+      size: 479
+    - path: ./configs/model/cls_model.yaml
+      md5: 348503f0903d4862c9f0fbcbd62f8755
+      size: 131
+    - path: ./configs/optimizer/adam.yaml
+      md5: e5e3f42c89ab440608a4c14e2c150ad3
+      size: 94
+    - path: ./configs/optimizer/sgd.yaml
+      md5: f4b9eaf84584fa2e3d1d5253b284ab48
+      size: 72
+    - path: ./configs/scheduler/multistep.yaml
+      md5: 86df11af57086580e0dd7c248d323403
+      size: 84
+    - path: ./configs/train_partnet.yaml
+      md5: ffc400120041f48d7db7cf809398b27f
+      size: 2022
+    - path: ./configs/transforms/partnet
+      md5: 2499c46d4f24af6562f2cfbe29836a3d.dir
+      size: 174
+      nfiles: 1
+    - path: ./resolve_config.py
+      md5: 55c8b471528728bfef1ba78363dd1811
+      size: 344
+    outs:
+    - path: ./exp/partnet/config.yaml
+      md5: 359a8ed982c90a2cab9e7b1faf84539b
+      size: 3095
+  train:
+    cmd: python ./train.py -cn config -cp ./exp/partnet
+    deps:
+    - path: ./datasets/partnet
+      md5: 32a991ebfb0ca974700ad99ea844ed3c.dir
+      size: 862
+      nfiles: 2
+    - path: ./exp/partnet/config.yaml
+      md5: 359a8ed982c90a2cab9e7b1faf84539b
+      size: 3095
+    - path: ./point_transformer
+      md5: 0c0af67bad35dd1a4fa0cdf0c642e65f.dir
+      size: 56346
+      nfiles: 44
+    - path: ./train.py
+      md5: 241ec7bb8e91cf5dc9524e4fbb1ebd3d
+      size: 2382
+    - path: ./training/metrics
+      md5: 6eb4963b1f6492193ad909a37a42fdb0.dir
+      size: 2221
+      nfiles: 4
+    - path: ./training/trainers
+      md5: 4aa6c863dde398a1a9cb8cd2d22b132d.dir
+      size: 26835
+      nfiles: 7
+    params:
+      exp/partnet/config.yaml:
+        model:
+          _target_: point_transformer.models.segm_network.SegmPointTransformer
+          in_features: 3
+          num_paired_blocks_with_skip_connection: 2
+          num_classes: ???
+        optimizer:
+          _target_: torch.optim.SGD
+          lr: 0.05
+          momentum: 0.9
+          weight_decay: 0.0001
+        params:
+          seed: 300
+          precision: 16
+          max_epochs: 200
+          train_batch_size: 32
+          test_batch_size: 64
+        scheduler:
+          _target_: torch.optim.lr_scheduler.MultiStepLR
+          milestones:
+          - 120
+          - 160
+          gamma: 0.1
+        test_transform:
+          _target_: torch_geometric.transforms.Compose
+          transforms:
+          - _target_: transforms.transformations.PosToFloat32
+          - _target_: transforms.transformations.FeaturesFromPos
+        train_transform:
+          _target_: torch_geometric.transforms.Compose
+          transforms:
+          - _target_: transforms.transformations.PosToFloat32
+          - _target_: transforms.transformations.FeaturesFromPos
+    outs:
+    - path: ./exp/partnet/exp
+      md5: f5fa7bc28bc9e469837f9cea2a5fc64f.dir
+      size: 3584
       nfiles: 2
