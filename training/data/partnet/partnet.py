@@ -5,7 +5,8 @@ from typing import Dict
 import h5py
 import torch
 from pytorch_lightning import LightningDataModule
-from torch_geometric.data import Data, DataLoader, Dataset
+from torch_geometric.data import Data, Dataset
+from torch_geometric.loader import DataLoader
 from tqdm.auto import tqdm
 
 from ..dataloader_settings import LoadSettings
