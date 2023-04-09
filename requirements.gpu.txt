@@ -1,5 +1,5 @@
 -r ./requirements.base.txt
--f https://data.pyg.org/whl/torch-1.12.0+cu113.html
+--extra-index-url https://data.pyg.org/whl/torch-1.12.0+cu113.html
 torch-scatter~=2.1.0
 torch-sparse~=0.6.15
 torch-cluster~=1.6.0
