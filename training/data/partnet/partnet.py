@@ -54,7 +54,7 @@ class PartNet(Dataset):
         pass
 
     def get_class_mapping(self) -> Dict[str, int]:
-        return {i: i for i in self._unique_labels}
+        return {str(i): i for i in self._unique_labels}
 
     @property
     def raw_file_names(self):

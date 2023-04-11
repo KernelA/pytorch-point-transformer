@@ -58,7 +58,8 @@ class SegmTrainer(LightningModule):
 
     def _log_iou_per_class(self, name: str, iou_per_class, batch_size: int):
         self.log(name,
-                 {self._class_labels[i]: iou_per_class[i] for i in range(len(self._class_labels))},
+                 {self._class_labels[i]: iou_per_class[i]
+                  for i in range(len(self._class_labels))},
                  on_step=False,
                  on_epoch=True,
                  batch_size=batch_size)
