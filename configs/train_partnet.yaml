@@ -6,7 +6,7 @@ hydra:
 
 defaults:
   - datasets: partnet
-  - optimizer: sgd
+  - optimizer: adamn
   - model: segm_model
   - scheduler: multistep
   - loss: cross_entropy
@@ -14,6 +14,9 @@ defaults:
   - transforms@train_transform: partnet/pre_transform
   - transforms@test_transform: ${transforms@train_transform}
   - _self_
+
+scheduler:
+  milestones: [50, 90]
 
 base_exp_dir: "./exp/partnet"
 exp_dir: "exp"
@@ -28,9 +31,9 @@ logger:
 params:
   seed: 300
   precision: 16
-  max_epochs: 200
-  train_batch_size: 32
-  test_batch_size: 64
+  max_epochs: 100
+  train_batch_size: 16
+  test_batch_size: 16
 
 model_trainer:
   _target_: training.trainers.segm_model.SegmTrainer
@@ -41,7 +44,7 @@ trainer:
   amp_backend: "native"
   auto_select_gpus: true
   benchmark: true
-  check_val_every_n_epoch: 5
+  check_val_every_n_epoch: 2
   deterministic: false
   fast_dev_run: false
   accelerator: 'gpu'
