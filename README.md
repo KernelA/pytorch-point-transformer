@@ -69,5 +69,5 @@ dvc repro pipelines/modelnet40/dvc.yaml:train
 
 1. [Download dataset here](https://shapenet.org/)
 2. Run: `python ./preprocess_partnet.py --data_dir <data_dir> --out_dir <where_to_store_processed>`
-3. Edit: [partnet.yaml](configs\datasets\partnet.yaml). Set `dataset_dir` to the `<where_to_store_processed>`
+3. Edit: [partnet.yaml](configs/datasets/partnet.yaml). Set `dataset_dir` to the `<where_to_store_processed>`
 4. Run: `dvc repro pipelines/partnet/dvc.yaml:train`
