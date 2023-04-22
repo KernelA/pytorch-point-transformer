@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_points", type=int, default=4096, required=False,
                         help="A number of points to sample for FPS")
     parser.add_argument("--device", default="cpy", type=str, required=False,
-                        help="A device to process")
+                        help="A device to process. cuda much faster")
 
     args = parser.parse_args()
 

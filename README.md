@@ -2,6 +2,15 @@
 
 [Original article](https://arxiv.org/abs/2012.09164)
 
+## Results
+
+### Modelnet 40
+
+[WandDB project (can be unavailable in the future)](https://wandb.ai/kernela/pytorch-point-transformer-modelnet40)
+[WandDB report (can be unavailable in the future)](https://api.wandb.ai/links/kernela/s2puzshc)
+
+You can download a trained model from the [model registry](https://docs.wandb.ai/guides/models).
+
 ## Description
 
 ### Presentation
@@ -41,12 +50,23 @@ pip install -r requirements.add.txt
 ### Train on the simple shapes dataset
 
 ```
-dvc repro -s -f pipelines/simple_shapes/dvc.yaml:train
+dvc repro pipelines/simple_shapes/dvc.yaml:train
 ```
 
 
-### Train on the ModelNet10 dataset
+### Train on the ModelNet10/40 dataset
 
 ```
-dvc repro -s -f pipelines/modelnet10/dvc.yaml:train
+dvc repro pipelines/modelnet10/dvc.yaml:train
 ```
+or
+```
+dvc repro pipelines/modelnet40/dvc.yaml:train
+```
+
+### Train segmentation model on PartNet
+
+1. [Download dataset here](https://shapenet.org/)
+2. Run: `python ./preprocess_partnet.py --data_dir <data_dir> --out_dir <where_to_store_processed>`
+3. Edit: [partnet.yaml](configs\datasets\partnet.yaml). Set `dataset_dir` to the `<where_to_store_processed>`
+4. Run: `dvc repro pipelines/partnet/dvc.yaml:train`
