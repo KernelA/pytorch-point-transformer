@@ -58,8 +58,8 @@ trainer:
   callbacks:
     - _target_: pytorch_lightning.callbacks.ModelCheckpoint
       dirpath: ${base_exp_dir}/${exp_dir}/${checkpoint_dir}
-      filename: '{epoch}-test-acc-{Test/mIOU:.2f}'
-      monitor: "Test/mIOU"
+      filename: '{epoch}-valid-acc-{Valid/mIOU:.2f}'
+      monitor: "Valid/mIOU"
       auto_insert_metric_name: false
       every_n_epochs: ${...check_val_every_n_epoch}
       save_last: true
