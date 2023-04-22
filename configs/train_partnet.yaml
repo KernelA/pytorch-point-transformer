@@ -1,0 +1,86 @@
+hydra:
+  run:
+    dir: . 
+  output_subdir: null 
+
+
+defaults:
+  - datasets: partnet
+  - optimizer: adamn
+  - model: segm_model
+  - scheduler: multistep
+  - loss: cross_entropy
+  - logger: wandb
+  - transforms@train_transform: partnet/pre_transform
+  - transforms@test_transform: ${transforms@train_transform}
+  - _self_
+
+scheduler:
+  milestones: [50, 90]
+
+base_exp_dir: "./exp/partnet"
+exp_dir: "exp"
+log_dir: "logs"
+config_dir: "config"
+checkpoint_dir: "checkpoint"
+
+logger:
+  project: 'pytorch-point-transformer-partnet'
+  log_model: 'all'
+
+params:
+  seed: 300
+  precision: 16
+  max_epochs: 100
+  train_batch_size: 16
+  test_batch_size: 16
+
+model_trainer:
+  _target_: training.trainers.segm_model.SegmTrainer
+  _recursive_: false
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  amp_backend: "native"
+  auto_select_gpus: true
+  benchmark: true
+  check_val_every_n_epoch: 2
+  deterministic: false
+  fast_dev_run: false
+  accelerator: 'gpu'
+  devices: 1
+  precision: ${params.precision}
+  max_epochs: ${params.max_epochs}
+  limit_train_batches: 1.0
+  limit_val_batches: 1.0
+  inference_mode: true
+  log_every_n_steps: 10
+  callbacks:
+    - _target_: pytorch_lightning.callbacks.ModelCheckpoint
+      dirpath: ${base_exp_dir}/${exp_dir}/${checkpoint_dir}
+      filename: '{epoch}-valid-acc-{Valid/mIOU:.2f}'
+      monitor: "Valid/mIOU"
+      auto_insert_metric_name: false
+      every_n_epochs: ${...check_val_every_n_epoch}
+      save_last: true
+      mode: "max"
+    - _target_: pytorch_lightning.callbacks.LearningRateMonitor
+      logging_interval: "epoch"
+      log_momentum: false
+    # - _target_: pytorch_lightning.callbacks.EarlyStopping
+    #   monitor: ${...callbacks[0].monitor}
+    #   min_delta: 0.01
+    #   mode: ${...callbacks[0].mode}
+    #   strict: true
+
+  logger: ${logger}
+
+datasets:
+  train_load_sett:
+    pre_transform: ${train_transform}
+    num_workers: 2
+    batch_size: ${params.train_batch_size}
+  test_load_sett:
+    pre_transform: ${train_transform}
+    num_workers: 2
+    batch_size: ${params.test_batch_size}

@@ -1,0 +1,59 @@
+vars:
+  - ../../configs/datasets/partnet.yaml:dataset_dir,data_root
+  - config_name: train_partnet
+  - ../../configs/train_partnet.yaml:base_exp_dir,exp_dir
+
+stages:
+  prepare-dataset:
+    wdir: ../..
+    cmd: python ./prepare_data.py -cn ${config_name}
+    deps:
+      - ./configs/datasets/partnet.yaml
+      - ${dataset_dir}
+      - ./configs/prepare_dataset.yaml
+      - ./configs/${config_name}.yaml
+      - ./configs/transforms/partnet
+      - ./prepare_data.py
+      - ./training/data/partnet
+    outs:
+      - ${data_root}:
+          cache: false
+          persist: true
+
+  prepare-config:
+    wdir: ../..
+    cmd: python ./resolve_config.py -cn ${config_name}
+    deps:
+      - ./resolve_config.py
+      - ./configs/${config_name}.yaml
+      - ./configs/datasets/partnet.yaml
+      - ./configs/model/cls_model.yaml
+      - ./configs/optimizer/sgd.yaml
+      - ./configs/optimizer/adam.yaml
+      - ./configs/scheduler/multistep.yaml
+      - ./configs/transforms/partnet
+    outs:
+      - ${base_exp_dir}/config.yaml
+
+  train:
+    wdir: ../..
+    cmd: python ./train.py -cn config -cp ${base_exp_dir}
+    params:
+      - ${base_exp_dir}/config.yaml:
+        - params
+        - optimizer
+        - scheduler
+        - model
+        - train_transform
+        - test_transform
+    deps:
+      - ./train.py
+      - ./point_transformer
+      - ./training/metrics
+      - ./training/trainers
+      - ${data_root}
+      - ${base_exp_dir}/config.yaml
+    outs:
+      - ${base_exp_dir}/${exp_dir}:
+          cache: false
+

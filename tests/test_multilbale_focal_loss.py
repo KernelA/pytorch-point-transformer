@@ -1,5 +1,6 @@
 import torch
-from training.losses import focal_loss, FocalLoss
+
+from training.losses import FocalLoss, focal_loss
 
 
 def test_func(logits_multiclass_tensor, multiclass_labels):

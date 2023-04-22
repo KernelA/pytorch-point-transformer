@@ -1,0 +1,4 @@
+_target_: point_transformer.models.segm_network.SegmPointTransformer
+in_features: 3
+num_paired_blocks_with_skip_connection: 4
+num_classes: '???'

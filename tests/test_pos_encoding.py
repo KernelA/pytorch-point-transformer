@@ -1,8 +1,8 @@
 import pytest
-
 import torch
 
 from point_transformer import PositionalEncoder
+
 
 @torch.no_grad()
 def test_position_encoding():

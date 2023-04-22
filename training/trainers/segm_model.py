@@ -2,14 +2,15 @@ import io
 from typing import Dict, Optional
 
 import torch
+import torch_scatter
 from hydra.utils import instantiate
+from matplotlib.cm import get_cmap
 from PIL import Image
 from pytorch_lightning import LightningModule
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
-from sklearn.metrics import ConfusionMatrixDisplay
 from torch_geometric.data import Batch, Data
-from torchmetrics import Accuracy, ConfusionMatrix
+from torchmetrics import JaccardIndex
 
 import wandb
 from point_transformer.models.base_model import BaseModel
@@ -17,7 +18,7 @@ from point_transformer.models.base_model import BaseModel
 from ..metrics import AccMean
 
 
-class ClsTrainer(LightningModule):
+class SegmTrainer(LightningModule):
     def __init__(self,
                  *,
                  model: BaseModel,
@@ -31,17 +32,21 @@ class ClsTrainer(LightningModule):
         self._scheduler_config = scheduler_config
         self._optimizer_config = optimizer_config
         num_classes = len(self.cls_mapping)
-        self._conf_matrix = ConfusionMatrix(num_classes, normalize="all")
-        self._accuracy = Accuracy(num_classes=num_classes)
-        self._train_accuracy = Accuracy(num_classes=num_classes)
+        self._train_iou_per_class = JaccardIndex(num_classes, average="none")
+        self._train_iou = JaccardIndex(num_classes, average="macro")
+        self._val_iou = self._train_iou.clone()
+        self._val_iou_per_class = self._train_iou_per_class.clone()
         self._mean_train_loss_per_epoch = AccMean()
         self._mean_val_loss_per_epoch = AccMean()
         self._class_labels = tuple(name for name, _ in sorted(
             self.cls_mapping.items(), key=lambda x: x[1]))
         self._test_stage = "Valid"
         self._train_stage = "Train"
-        self._is_log_incorrect = False
         self._loss = loss
+        self._cmap = get_cmap("PiYG")
+        self._incorrect_example = None
+        self._incorrect_labels_mask = None
+        self._ratio_of_incorrect_samples = 0.0
 
     def configure_optimizers(self):
         optimizer = instantiate(self._optimizer_config, self.model.parameters())
@@ -51,15 +56,34 @@ class ClsTrainer(LightningModule):
 
         return optimizer
 
+    def _log_iou_per_class(self, name: str, iou_per_class, batch_size: int):
+        self.log(name,
+                 {self._class_labels[i]: iou_per_class[i]
+                  for i in range(len(self._class_labels))},
+                 on_step=False,
+                 on_epoch=True,
+                 batch_size=batch_size)
+
     def training_step(self, batch: Batch, batch_idx):
         predicted_logits = self.model.forward_data(batch)
         loss = self._loss(predicted_logits, batch.y)
-        self._train_accuracy(predicted_logits, batch.y)
-        self.log(f"{self._train_stage}/Accuracy",
-                 self._train_accuracy,
+
+        with torch.no_grad():
+            predicted_class = self.model.predict_class(predicted_logits)
+
+        iou_per_class = self._train_iou_per_class(predicted_class, batch.y)
+        moiu = self._train_iou(predicted_class, batch.y)
+
+        self.log(f"{self._train_stage}/mIOU",
+                 moiu,
                  on_step=False,
-                 on_epoch=True)
+                 on_epoch=True,
+                 batch_size=batch.num_graphs)
+        self._log_iou_per_class(f"{self._train_stage}/IOU",
+                                iou_per_class, batch_size=batch.num_graphs)
+
         self._mean_train_loss_per_epoch(batch.num_graphs * loss.item(), batch.num_graphs)
+
         return loss
 
     def training_epoch_end(self, outputs) -> None:
@@ -67,15 +91,14 @@ class ClsTrainer(LightningModule):
         self.log(f"{self._train_stage}/NLL", train_loss)
         self._mean_train_loss_per_epoch.reset()
 
-    def _log_point_cloud(self, data: Data, batch_idx):
+    def _log_point_cloud(self, data: Data, incorrect_label_mask: torch.Tensor):
+
         point_size_config = {
             "material": {
                 'cls': 'PointsMaterial',
                 'size': 0.025
             }
         }
-
-        class_name = self._class_labels[data.y[0]]
 
         if isinstance(self.logger, TensorBoardLogger):
             vertices = data.pos[None, ...]
@@ -86,7 +109,9 @@ class ClsTrainer(LightningModule):
                     ]
                 ], dtype=torch.uint8), (1, vertices.shape[1], 1))
 
-            self.logger.experiment.add_mesh(f"{self._test_stage}/{class_name}/{batch_idx}",
+            colors *= incorrect_label_mask.view(1, -1, 1).cpu()
+
+            self.logger.experiment.add_mesh(f"{self._test_stage}/Most_errors_per_point",
                                             vertices=vertices,
                                             colors=colors,
                                             global_step=self.global_step,
@@ -99,9 +124,11 @@ class ClsTrainer(LightningModule):
                     [255, 0, 0]
                 ], dtype=torch.uint8), (vertices.shape[0], 1))
 
+            colors *= incorrect_label_mask.view(-1, 1).cpu()
+
             self.logger.experiment.log(
                 {
-                    f"{self._test_stage}/{class_name}":
+                    f"{self._test_stage}/Most_errors_per_point":
                         wandb.Object3D(
                             torch.cat((vertices.detach().cpu(), colors), dim=1).numpy()
                         )
@@ -110,59 +137,40 @@ class ClsTrainer(LightningModule):
 
     def validation_step(self, batch: Batch, batch_idx):
         predicted_logits = self.model.forward_data(batch)
-        self._accuracy(predicted_logits, batch.y)
-        self._conf_matrix(predicted_logits, batch.y)
-        self.log(f"{self._test_stage}/Accuracy", self._accuracy, on_step=False, on_epoch=True)
-
         predicted_labels = self.model.predict_class(predicted_logits)
 
-        loss = self._loss(predicted_logits, batch.y)
+        iou_per_class = self._val_iou_per_class(predicted_labels, batch.y)
+        miou = self._val_iou(predicted_labels, batch.y)
 
+        self.log(f"{self._test_stage}/mIOU", miou,
+                 on_step=False,
+                 on_epoch=True,
+                 batch_size=batch.num_graphs)
+        self._log_iou_per_class(f"{self._test_stage}/IOU", iou_per_class,
+                                batch_size=batch.num_graphs)
+
+        loss = self._loss(predicted_logits, batch.y)
         self._mean_val_loss_per_epoch(batch.num_graphs * loss.item(), batch.num_graphs)
 
-        incorrect_example_index = torch.nonzero(predicted_labels != batch.y).view(-1)
+        incorrect_labels_mask = predicted_labels != batch.y
+        incorrect_label_ratios = torch_scatter.scatter_sum(
+            incorrect_labels_mask, index=batch.batch).to(torch.float32)
+        incorrect_label_ratios /= torch.diff(batch.ptr)
 
-        if len(incorrect_example_index) > 0 and not self._is_log_incorrect:
-            incorrect_example_index = incorrect_example_index[0].item()
-            incorrect_example = batch[incorrect_example_index]
-            self._log_point_cloud(incorrect_example, batch_idx)
-            self._is_log_incorrect = True
+        max_incorrect_labels_index = incorrect_label_ratios.argmax()
+
+        if self._ratio_of_incorrect_samples is None or incorrect_label_ratios[max_incorrect_labels_index] > self._ratio_of_incorrect_samples:
+            self._incorrect_labels_mask = incorrect_labels_mask[batch.batch == max_incorrect_labels_index].detach(
+            )
+            self._incorrect_example = batch.get_example(max_incorrect_labels_index).clone()
 
     def validation_epoch_end(self, outputs) -> None:
-        matrix = self._conf_matrix.compute().cpu().numpy()
-
-        conf_plot = ConfusionMatrixDisplay(matrix.round(
-            decimals=2), display_labels=self._class_labels)
-        conf_plot.plot()
-
-        fig = conf_plot.figure_
-        fig.set_size_inches(20, 20)
-
-        ax = fig.axes[0]
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=-45)
-
-        log_name = f"{self._test_stage}/Conf_matrix"
-
         val_loss = self._mean_val_loss_per_epoch.compute().cpu().item()
         self.log(f"{self._test_stage}/NLL", val_loss)
 
-        if isinstance(self.logger, TensorBoardLogger):
-            self.logger.experiment.add_figure(log_name, fig, global_step=self.global_step)
-        elif isinstance(self.logger, WandbLogger):
-            buffer = io.BytesIO()
-            fig.savefig(buffer, bbox_inches="tight")
-            self.logger.log_image(key=log_name, images=[
-                                  Image.open(buffer)], caption=["Confusion matrix"])
-
-            col_labels = [tick.get_text()
-                          for tick in conf_plot.figure_.get_axes()[0].get_xticklabels()]
-            row_labels = [tick.get_text()
-                          for tick in conf_plot.figure_.get_axes()[0].get_yticklabels()]
-
-            rows = [[label] + list(row) for row, label in zip(matrix, row_labels)]
-            conf_table = wandb.Table(data=rows, columns=["true_label"] + col_labels)
-            self.logger.log_metrics({f"{self._test_stage}/Conf_matrix_table": conf_table})
-
-        self._is_log_incorrect = False
-        self._conf_matrix.reset()
+        self._log_point_cloud(self._incorrect_example, self._incorrect_labels_mask)
         self._mean_val_loss_per_epoch.reset()
+
+        self._incorrect_example = None
+        self._incorrect_labels_mask = None
+        self._ratio_of_incorrect_samples = 0.0
