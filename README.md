@@ -7,6 +7,7 @@
 ### Modelnet 40
 
 [WandDB project (can be unavailable in the future)](https://wandb.ai/kernela/pytorch-point-transformer-modelnet40)
+
 [WandDB report (can be unavailable in the future)](https://api.wandb.ai/links/kernela/s2puzshc)
 
 You can download a trained model from the [model registry](https://docs.wandb.ai/guides/models).
