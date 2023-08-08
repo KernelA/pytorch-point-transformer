@@ -33,14 +33,14 @@ You can download a trained model from the [model registry](https://docs.wandb.ai
 
 ### CPU (training will be slow)
 ```
-pip install -r ./requirements.torch.cpu.txt
+pip install -r ./requirements.torch.gpu.txt
 pip install -r ./requirements.cpu.txt -r ./requirements.base.txt
 ```
 
 ### GPU:
 ```
-pip install -r ./requirements.torch.cpu.txt
-pip install -r ./requirements.cpu.txt -r ./requirements.base.txt
+pip install -r ./requirements.torch.gpu.txt
+pip install -r ./requirements.gpu.txt -r ./requirements.base.txt
 ```
 
 Only for `presentation.ipynb`
